@@ -90,7 +90,6 @@ sync
 You should see, within a few seconds, the vendor U-Boot, then:
 
 ```
-=== DE1-SoC Debian 12 / Linux 6.12 ===
 u-boot.scr: loading GHRD soc_system.rbf into the FPGA fabric
 FPGA configured with soc_system.rbf
 ...

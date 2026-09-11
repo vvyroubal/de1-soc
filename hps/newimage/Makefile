@@ -8,7 +8,7 @@
 #     make all        # fetch kernel, build kernel+rootfs, assemble the image
 #     # then flash image/de1soc-debian12-6.12.img to an SD card.
 #
-#  Targets: deps fetch kernel rootfs image all clean
+#  Targets: deps fetch fetch-tarball kernel dtbocfg rootfs image all clean distclean
 #  rootfs/ and image assembly need root — they run via $(ROOT) (sudo by default;
 #  override with `make ROOT=pkexec image`).
 # =============================================================================

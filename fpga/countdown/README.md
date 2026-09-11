@@ -33,14 +33,14 @@ quartus_sh --flow compile countdown
 
 ## Run it (JTAG — temporary, survives until power-off)
 
-Program the FPGA over the USB-Blaster II. On the DE1-SoC JTAG chain the FPGA is
-typically the **second** device (`@2`; the HPS is `@1`) — confirm the index for
-your board with `jtagconfig` first (the standalone `../program.sh` for the
-blinker uses `@1`, so it varies):
+Program the FPGA over the USB-Blaster II. On a standard DE1-SoC chain the Cyclone
+V is the single programmable device at index **`@1`** (as `../program.sh` uses) —
+but always confirm the index for your board with `jtagconfig` first, since it can
+differ:
 
 ```bash
 jtagconfig                                          # list devices + their index
-quartus_pgm -m jtag -o "P;output_files/countdown.sof@2"
+quartus_pgm -m jtag -o "P;output_files/countdown.sof@1"
 ```
 
 This is volatile RAM configuration and works regardless of the MSEL switch, so it
@@ -70,9 +70,15 @@ sudo /usr/local/sbin/fpga-load.sh -u                # remove overlay (release th
 ```
 
 Files here:
-- `fpga-load.sh` — the loader (embeds a generic overlay; installed on the image).
+- `fpga-load.sh` — the loader (installed on the image). It stages **whatever
+  `.rbf` you pass** to `/lib/firmware/fpga.rbf` and applies an embedded *generic*
+  overlay that names `fpga.rbf` — so the filename you pass is just the source;
+  the in-fabric firmware name is always `fpga.rbf`.
 - `fpga_generic_overlay.dts` / `countdown_overlay.dts` — overlay sources (target
-  `/soc/base_fpga_region`, name the `.rbf`) for reference / customizing.
+  `/soc/base_fpga_region`) for reference / customizing. Note
+  `countdown_overlay.dts` names `countdown.rbf`; it is **not** what `fpga-load.sh`
+  applies — use it only if you apply an overlay manually (then place the bitstream
+  at `/lib/firmware/countdown.rbf`).
 - `fpga-overlay.service` — optional systemd unit to apply a design at boot.
 
 (Alternatively, put the `.rbf` on the FAT boot partition and load it from

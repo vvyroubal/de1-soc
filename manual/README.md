@@ -36,6 +36,8 @@ diacritics.
 ## Editing content
 - Keep `content_en.tex` and `content_hr.tex` structurally in sync (same sections, same order).
 - Callout titles are per language: `\begin{note}[Napomena]`, `\begin{warn}[Upozorenje]`, `\begin{tip}[Savjet]`.
-- The download sections name the vendor sources (Terasic Resources / System CD for
-  images; Quartus Prime Lite from Intel/Altera for tools). Vendor URLs and page
-  names change over time — treat them as starting points.
+- The OS image is obtained by **building from source** (this repo) or **flashing
+  a prebuilt release** — there is no "download the vendor image" step. The only
+  vendor sources named are for the FPGA design: the Terasic System CD (GHRD
+  reference) and Quartus Prime Lite from Intel/Altera. Vendor URLs and page names
+  change over time — treat them as starting points.

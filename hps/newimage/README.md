@@ -44,10 +44,13 @@ Runs, in order:
    incl. ext4 POSIX ACLs) and the DE1-SoC device tree
    (`kernel-custom/socfpga_cyclone5_de1_soc.dts`, not in mainline), then builds
    `zImage`, dtbs and modules.
-3. **rootfs** — `debootstrap` a bookworm armhf rootfs (incl. `dbus`, ssh, sudo,
+3. **dtbocfg** — build the out-of-tree `dtbocfg` overlay-configfs module
+   (vendored at `dtbocfg/`) and stage it into the kernel modules tree. This is
+   what enables runtime FPGA reconfiguration from Linux (`fpga-load.sh`).
+4. **rootfs** — `debootstrap` a bookworm armhf rootfs (incl. `dbus`, ssh, sudo,
    systemd-timesyncd, locales) and configure it (`make-rootfs.sh` →
    `configure-rootfs.sh`). **Needs root** (debootstrap/chroot) — runs via `sudo`.
-4. **image** — assemble `image/de1soc-debian12-6.12.img` (`assemble-image.sh`).
+5. **image** — assemble `image/de1soc-debian12-6.12.img` (`assemble-image.sh`).
    **Needs root** (loopback, mkfs, mount).
 
 Override the privilege escalation with `make ROOT=pkexec all`.

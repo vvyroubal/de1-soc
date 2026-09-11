@@ -15,11 +15,11 @@ alongside the binaries (satisfying GPLv2 §3(a)).
 
 | Component | Version | License | Corresponding source |
 |---|---|---|---|
-| **Bootloader** — preloader (SPL) + U-Boot proper | U-Boot **2013.01.01** (built Oct 12 2016 via Altera SoC EDS 16.0, Sourcery CodeBench Lite 2015.11-45 / `arm-altera-eabi-gcc 5.2.0`) | GPLv2 (U-Boot core) + BSD-style (Altera `hwlib`/preloader) | Archived: `legal/source/u-boot-socfpga-ACDS16.0/` (Intel `u-boot-socfpga`, tag `ACDS16.0_REL_GSRD_PR`). Board handoff/BSP from Terasic's published DE1-SoC GHRD (see Bootloader section). |
+| **Bootloader** — preloader (SPL) + U-Boot proper | U-Boot **2013.01.01** (built Oct 12 2016 via Altera SoC EDS 16.0, Sourcery CodeBench Lite 2015.11-45 / `arm-altera-eabi-gcc 5.2.0`) | GPLv2 (U-Boot core) + BSD-style (Altera `hwlib`/preloader) | Archived: `legal/source/u-boot-socfpga-ACDS16.0.tar.gz` (Intel `u-boot-socfpga`, tag `ACDS16.0_REL_GSRD_PR`). Board handoff/BSP from Terasic's published DE1-SoC GHRD (see Bootloader section). |
 | **Linux kernel** | mainline **6.12** (`ARCH=arm`, custom `socfpga_defconfig`) + custom DTS `socfpga_cyclone5_de1_soc` | GPLv2 | Pinned Linux 6.12 via git submodule (`torvalds/linux` @ `v6.12`); tarball fallback from kernel.org. Our DTS/config are in `kernel-custom/`. |
 | **dtbocfg** — device-tree overlay-configfs module (enables runtime FPGA reconfig from Linux) | ikwzm/dtbocfg 0.1.1 | BSD-2-Clause (Ichiro Kawazome) | Vendored source at `hps/newimage/dtbocfg/` (incl. its `LICENSE`); shipped in the image as the out-of-tree `dtbocfg.ko`. |
 | **Root filesystem** | Debian 12 (bookworm), armhf | DFSG (GPL / permissive mix, per-package) | Debian publishes all source via `https://deb.debian.org/debian` and `snapshot.debian.org`; per-package source obtainable with `apt-get source <pkg>`. |
-| **FPGA bitstream** | `soc_system.rbf` — community DE1-SoC GHRD (top-level by S. Kashani-Akhavan) + Altera HPS base IP | Community HDL: **The Unlicense** (public domain) + Intel IP License (compiled bitstream redistributable) | Redistributable as a compiled `.rbf` — see **FPGA bitstream** note below; upstream license at `fpga/hps_ghrd/LICENSE.upstream`. |
+| **FPGA bitstream** | `soc_system.rbf` — DE1-SoC GHRD (`de1_soc_top_v2.vhd`, a minimal top derived from the community GHRD by S. Kashani-Akhavan) + Altera HPS base IP | Community HDL: **The Unlicense** (public domain) + Intel IP License (compiled bitstream redistributable) | Redistributable as a compiled `.rbf` — see **FPGA bitstream** note below; upstream license at `fpga/hps_ghrd/LICENSE.upstream`. |
 | **Project scripts, custom DTS, device tree, countdown FPGA design** | — | © VUKA, **GPL-2.0-or-later** (see top-level `LICENSE`) | This repository. |
 
 ## Bootloader (GPLv2) — the key obligation
@@ -53,7 +53,7 @@ We build the kernel from the unmodified mainline `linux-6.12` source plus our
 own device tree (`socfpga_cyclone5_de1_soc.dts`) and `socfpga_defconfig`.
 Archive the kernel source tarball + the DTS + the `.config` next to the
 shipped image so the exact kernel is reproducible. The DTS is original work in
-this repository (`hps/newimage/kernel/.../socfpga_cyclone5_de1_soc.dts`).
+this repository (`hps/newimage/kernel-custom/socfpga_cyclone5_de1_soc.dts`).
 
 ## Debian root filesystem
 
@@ -68,13 +68,17 @@ Interest, Inc. — do not imply endorsement.
 `soc_system.rbf` is the **compiled** FPGA programming file. Its sources were
 reviewed (`fpga/hps_ghrd/`):
 
-- **Top-level HDL** (`de1_soc_top.vhd`) is the **community** DE1-SoC GHRD,
-  authored by **Sahand Kashani-Akhavan** ("from Terasic documentation"), not
-  Terasic's proprietary reference design. It comes from his "SoC-FPGA Design
-  Guide" (`https://github.com/sahandKashani/SoC-FPGA-Design-Guide`), released
-  into the **public domain under The Unlicense** (SPDX: `Unlicense`) — so it is
-  freely redistributable. The upstream license text is included at
-  `fpga/hps_ghrd/LICENSE.upstream`; the author is credited there and here.
+- **Top-level HDL** — the shipped `soc_system.rbf` is produced by
+  `de1_soc_top_v2.vhd` (see `fpga/hps_ghrd/README.md`), a **minimal original top
+  level** (HPS bridge + DDR3 + a small probe) **structurally derived from the
+  community** DE1-SoC GHRD by **Sahand Kashani-Akhavan** ("from Terasic
+  documentation"), not Terasic's proprietary reference design. That community
+  design comes from his "SoC-FPGA Design Guide"
+  (`https://github.com/sahandKashani/SoC-FPGA-Design-Guide`), released into the
+  **public domain under The Unlicense** (SPDX: `Unlicense`) — so it is freely
+  redistributable. The upstream license text (covering `de1_soc_top*.vhd`,
+  including `_v2`) is at `fpga/hps_ghrd/LICENSE.upstream`; the author is credited
+  there and here.
 - **Altera IP**: the Qsys system (`de1_soc.qsys`) instantiates only the free
   **`altera_hps`** (Hard Processor System bridge) plus clock sources — **no
   license-required premium IP**. It builds under the free Quartus Lite edition.
