@@ -16,9 +16,9 @@ HEX5  HEX4  HEX3   HEX2  HEX1  HEX0
 | File | Purpose |
 |------|---------|
 | `countdown_top.vhd` | The design (counter + BCD + 7-seg decoder). |
-| `countdown.qsf` | Device (`5CSEMA5F31C6N`) + pin assignments. |
+| `countdown.qsf` | Quartus device (`5CSEMA5F31C6`) + pin assignments. |
 | `countdown.qpf` | Quartus project file. |
-| `fpga-load.sh`, `*_overlay.dts`, `fpga.dtbo`, `fpga-overlay.service` | Load the design at **runtime from HPS Linux** (configfs device-tree overlay) — see below. |
+| `fpga-load.sh`, `*_overlay.dts`, `fpga-overlay.service` | Load the design at **runtime from HPS Linux** (configfs overlay via `dtbocfg`) — see below. |
 
 ## Build
 
@@ -34,10 +34,13 @@ quartus_sh --flow compile countdown
 ## Run it (JTAG — temporary, survives until power-off)
 
 Program the FPGA over the USB-Blaster II. On the DE1-SoC JTAG chain the FPGA is
-the **second** device (`@2`; the HPS is `@1`):
+typically the **second** device (`@2`; the HPS is `@1`) — confirm the index for
+your board with `jtagconfig` first (the standalone `../program.sh` for the
+blinker uses `@1`, so it varies):
 
 ```bash
-quartus_pgm -m jtag -o "p;output_files/countdown.sof@2"
+jtagconfig                                          # list devices + their index
+quartus_pgm -m jtag -o "P;output_files/countdown.sof@2"
 ```
 
 This is volatile RAM configuration and works regardless of the MSEL switch, so it

@@ -1,6 +1,6 @@
 # ==============================================================================
 # countdown.qsf  --  Quartus settings for the DE1-SoC countdown design
-# Device: Cyclone V SoC 5CSEMA5F31C6N (DE1-SoC)
+# Board chip: Cyclone V SoC 5CSEMA5F31C6N; Quartus DEVICE = 5CSEMA5F31C6 (no "N").
 # Pin assignments are the standard DE1-SoC locations; verify against the
 # official DE1-SoC.qsf from the Terasic System CD if a signal doesn't light.
 # ==============================================================================
