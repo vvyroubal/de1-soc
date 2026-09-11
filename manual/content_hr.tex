@@ -284,16 +284,18 @@ Provjera: nekomprimirana Cyclone~V (5CSEMA5) slika je $\sim$7\,MB; datoteka od
 $\sim$2\,MB je komprimirana.
 \end{warn}
 
-\begin{note}[Rekonfiguracija iz Linuxa tijekom rada]
-Cyclone~V FPGA Manager može rekonfigurirati programabilnu logiku tijekom rada iz HPS-a, vođen
-podrškom jezgre za FPGA regije / device-tree overlay (configfs). To je sučelje
-postojalo na starijoj tvorničkoj Altera 4.5 jezgri; na \emph{mainline} Linuxu 6.12
-možda nije izloženo. Prije nego se oslonite na njega, provjerite postoje li
-\code{/sys/class/fpga\_manager/fpga0} i
-\code{/sys/kernel/config/device-tree/overlays} na vašoj jezgri --- ako ih nema,
-koristite učitavanje pri podizanju preko U-Boota (gore). Eksperimentalne pomoćne
-skripte i overlayi pod \code{fpga/countdown/} pokazuju pristup s overlayem;
-bitstream mora biti nekomprimiran u svakom slučaju.
+\begin{note}[Rekonfiguracija iz Linuxa tijekom rada (bez ponovnog podizanja)]
+Programabilnu logiku možete rekonfigurirati i tijekom rada iz HPS-a. Mainline Linux
+nema ugrađeno korisničko sučelje za overlaye, pa ova slika automatski učitava modul
+\code{dtbocfg} (koji daje \code{/sys/kernel/config/device-tree/overlays}) i sadrži
+\code{/usr/local/sbin/fpga-load.sh}. On sprema nekomprimirani \code{.rbf} u
+\code{/lib/firmware} i primjenjuje device-tree overlay na
+\code{/soc/base\_fpga\_region}, pa FPGA Manager programira logiku:
+\begin{lstlisting}
+sudo /usr/local/sbin/fpga-load.sh my_design.rbf
+cat /sys/class/fpga_manager/fpga0/state    # -> operating
+\end{lstlisting}
+\code{.rbf} mora biti nekomprimiran u svakom slučaju. Vidi \code{fpga/countdown/}.
 \end{note}
 Ova slika je bez grafičkog sučelja (nema VGA framebuffera --- mainline jezgra nema
 \code{altvipfb} upravljački program), pa nema aktivnog prikaza koji bi se poremetio

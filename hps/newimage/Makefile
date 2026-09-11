@@ -29,7 +29,7 @@ DTSDIR  := $(KDIR)/arch/arm/boot/dts/intel/socfpga
 JOBS    := $(shell nproc)
 ROOT    ?= sudo
 
-.PHONY: all deps fetch fetch-tarball kernel rootfs image clean distclean
+.PHONY: all deps fetch fetch-tarball kernel dtbocfg rootfs image clean distclean
 all: image
 
 ## install the host build tools
@@ -68,13 +68,25 @@ kernel: fetch
 	grep -q 'socfpga_cyclone5_de1_soc.dtb' $(DTSDIR)/Makefile || \
 	  echo 'dtb-$$(CONFIG_ARCH_INTEL_SOCFPGA) += socfpga_cyclone5_de1_soc.dtb' >> $(DTSDIR)/Makefile
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) socfpga_defconfig
+	# Pin a clean "6.12.0" version: LOCALVERSION_AUTO is `default y`, so the
+	# defconfig alone doesn't disable it, and the build (which modifies the pinned
+	# submodule tree) would otherwise stamp a "-dirty" suffix.
+	$(KDIR)/scripts/config --file $(KDIR)/.config --disable LOCALVERSION_AUTO
+	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) olddefconfig
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) -j$(JOBS) zImage modules dtbs
 	rm -rf $(HERE)/modules-staging
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) \
 	  INSTALL_MOD_PATH=$(HERE)/modules-staging modules_install
 
+## build the dtbocfg overlay-configfs module and stage it with the kernel modules
+## (gives userspace a way to apply device-tree overlays -> runtime FPGA reconfig)
+dtbocfg: kernel
+	$(MAKE) -C $(HERE)/dtbocfg ARCH=arm CROSS_COMPILE=$(CROSS) KERNEL_SRC=$(KDIR) all
+	install -D -m 0644 $(HERE)/dtbocfg/dtbocfg.ko \
+	  $(HERE)/modules-staging/lib/modules/$$(cat $(KDIR)/include/config/kernel.release)/extra/dtbocfg.ko
+
 ## debootstrap + configure the Debian rootfs (needs root; uses staged modules)
-rootfs: kernel
+rootfs: dtbocfg
 	$(ROOT) bash $(HERE)/make-rootfs.sh
 
 ## assemble the SD image (needs root: loopback, mkfs, mount)

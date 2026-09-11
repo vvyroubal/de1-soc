@@ -2,22 +2,19 @@
 /plugin/;
 
 /*
- * Device-tree overlay to reconfigure the FPGA from Linux (HPS) at runtime.
- * Applying it makes the base FPGA region program the named bitstream via the
- * FPGA Manager. The counter is self-contained (no HPS-facing peripherals), so
- * no child device nodes are needed here.
+ * Countdown-specific FPGA-reconfiguration overlay (mainline kernel). Applying it
+ * makes the base FPGA region program /lib/firmware/countdown.rbf via the FPGA
+ * Manager. The counter is self-contained (no HPS-facing peripherals), so no
+ * child device nodes are needed.
  *
- * The bitstream file must be in /lib/firmware/ on the board.
+ * Target is the mainline node name /soc/base_fpga_region (underscores).
+ * Applied from userspace via the dtbocfg module (configfs).
  */
 
 / {
     fragment@0 {
-        target-path = "/soc/base-fpga-region";
-        #address-cells = <1>;
-        #size-cells = <1>;
+        target-path = "/soc/base_fpga_region";
         __overlay__ {
-            #address-cells = <1>;
-            #size-cells = <1>;
             firmware-name = "countdown.rbf";
         };
     };

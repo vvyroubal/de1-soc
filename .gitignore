@@ -78,3 +78,8 @@ graphify-out/
 # and ships GPL-compliant (corresponding U-Boot source) with no extra fetch:
 !/hps/newimage/fpga/soc_system.rbf
 !/hps/newimage/legal/source/u-boot-socfpga-ACDS16.0.tar.gz
+# stray out-of-tree module build artifacts (dtbocfg built via M=)
+/hps/newimage/Module.symvers
+/hps/newimage/modules.order
+/hps/newimage/.Module.symvers.cmd
+/hps/newimage/.modules.order.cmd

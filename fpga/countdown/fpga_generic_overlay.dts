@@ -2,22 +2,20 @@
 /plugin/;
 
 /*
- * Generic FPGA reconfiguration overlay for the DE1-SoC (Cyclone V).
- * Loads /lib/firmware/fpga.rbf into the base FPGA region at runtime.
+ * Generic FPGA-reconfiguration overlay for the DE1-SoC (Cyclone V), mainline
+ * kernel. Applying it makes the base FPGA region program /lib/firmware/fpga.rbf
+ * via the FPGA Manager. Design-agnostic (names only the bitstream), so it works
+ * for ANY self-contained fabric design. For HPS-facing designs (peripherals the
+ * HPS drives) add matching child device nodes under __overlay__.
  *
- * Design-agnostic: it only names the bitstream (fpga.rbf), so it works for ANY
- * self-contained fabric design. For HPS-facing designs (peripherals the HPS
- * drives), add matching child device nodes under __overlay__.
+ * Target is the mainline node name /soc/base_fpga_region (underscores).
+ * Applied from userspace via the dtbocfg module (configfs).
  */
 
 / {
     fragment@0 {
-        target-path = "/soc/base-fpga-region";
-        #address-cells = <1>;
-        #size-cells = <1>;
+        target-path = "/soc/base_fpga_region";
         __overlay__ {
-            #address-cells = <1>;
-            #size-cells = <1>;
             firmware-name = "fpga.rbf";
         };
     };

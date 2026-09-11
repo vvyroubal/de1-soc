@@ -55,9 +55,18 @@ Name=eth0 en*
 DHCP=yes
 EOF
 
-echo "[*] install kernel modules (6.12.0)"
+KREL=$(ls "$MODSRC" | head -1)   # kernel release string (e.g. 6.12.0)
+echo "[*] install kernel modules ($KREL)"
 mkdir -p "$R/lib/modules"
-cp -a "$MODSRC/6.12.0" "$R/lib/modules/"
+cp -a "$MODSRC/$KREL" "$R/lib/modules/"
+
+echo "[*] autoload dtbocfg (overlay-configfs) for runtime FPGA reconfiguration"
+# dtbocfg.ko ships under lib/modules/6.12.0/extra/ (staged by 'make dtbocfg').
+# Loading it exposes /sys/kernel/config/device-tree/overlays so fpga-load.sh can
+# apply an overlay that programs a bitstream via the FPGA Manager at runtime.
+mkdir -p "$R/etc/modules-load.d"
+echo dtbocfg > "$R/etc/modules-load.d/dtbocfg.conf"
+mkdir -p "$R/lib/firmware"   # fpga-load.sh stages bitstreams here (minimal rootfs lacks it)
 
 echo "[*] chroot config (users, services) via qemu"
 cp -f /usr/bin/qemu-arm-static "$R/usr/bin/" 2>/dev/null || true
@@ -74,7 +83,7 @@ ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || true
 # Persistent-journal dir: setgid + group systemd-journal so journald's files
 # inherit the group and non-root (debian, a member) can read them.
 install -d -o root -g systemd-journal -m 2755 /var/log/journal
-depmod 6.12.0 || true
+for d in /lib/modules/*/; do depmod "$(basename "$d")" || true; done
 CHROOT
 
 echo "[*] done. rootfs size: $(du -sh "$R" | cut -f1)"

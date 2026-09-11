@@ -148,8 +148,10 @@ FAT (boot) · `p2` type-A2 (vendor preloader) · `p3` ext4 rootfs (last, grows).
   `qsys-generate → compile → quartus_cpf` recipe.
 - **Program a standalone design over JTAG**: `cd fpga && quartus_sh -t build.tcl`
   then `./program.sh` (USB-Blaster II).
-- **Load a bitstream at runtime from Linux**: see [`fpga/countdown/`](fpga/countdown/)
-  (configfs device-tree overlay + uncompressed `.rbf`).
+- **Load a bitstream at runtime from Linux** (no reboot): `sudo fpga-load.sh <uncompressed.rbf>`.
+  The image ships `/usr/local/sbin/fpga-load.sh` and autoloads the `dtbocfg`
+  overlay module, so the FPGA Manager reprograms the fabric from userspace via a
+  device-tree overlay on `/soc/base_fpga_region`. See [`fpga/countdown/`](fpga/countdown/).
 
 ## Licensing
 Open-source notices and the corresponding-source bundle are in

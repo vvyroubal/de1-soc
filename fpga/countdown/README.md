@@ -48,22 +48,32 @@ won't disturb your SD/Linux setup.
 > countdown, either remove the SD card, or re-run the `quartus_pgm` command
 > *after* the board has booted.
 
-## Run it from HPS Linux at runtime (no JTAG)
+## Run it from HPS Linux at runtime (no JTAG, no reboot)
 
-With the Debian image booted (MSEL = 00000), you can reconfigure the fabric from
-Linux via the FPGA Manager + a configfs device-tree overlay — no cable needed.
-This needs an **uncompressed** `.rbf` (convert the `.sof` with
-`quartus_cpf -c -o bitstream_compression=off countdown.sof countdown.rbf`).
+On the Debian image (MSEL = 00000) you can reconfigure the fabric from Linux.
+Mainline has no built-in userspace overlay interface, so the image autoloads the
+**`dtbocfg`** module (which provides `/sys/kernel/config/device-tree/overlays`)
+and ships **`/usr/local/sbin/fpga-load.sh`**. Applying an overlay that targets
+`/soc/base_fpga_region` makes the FPGA Manager program the bitstream. *(Verified
+on hardware: `state` → `operating`.)*
 
-- `fpga-load.sh` — loads an uncompressed `.rbf` by applying a device-tree overlay
-  through configfs (the working method on this kernel; the sysfs firmware-write
-  interface isn't available on 6.12 for gen5).
-- `countdown_overlay.dts` / `fpga_generic_overlay.dts` — the overlay sources;
-  `fpga.dtbo` is a compiled overlay.
-- `fpga-overlay.service` — optional systemd unit to apply it at boot.
+Needs an **uncompressed** `.rbf` (MSEL=00000 / FPP path):
+`quartus_cpf -c -o bitstream_compression=off countdown.sof countdown.rbf`.
 
-(Placing the `.rbf` on the FAT boot partition and loading it from `u-boot.scr` is
-the other option — that's exactly how the GHRD `soc_system.rbf` is loaded.)
+```bash
+sudo /usr/local/sbin/fpga-load.sh countdown.rbf     # stage to /lib/firmware + program
+cat /sys/class/fpga_manager/fpga0/state             # -> operating
+sudo /usr/local/sbin/fpga-load.sh -u                # remove overlay (release the region)
+```
+
+Files here:
+- `fpga-load.sh` — the loader (embeds a generic overlay; installed on the image).
+- `fpga_generic_overlay.dts` / `countdown_overlay.dts` — overlay sources (target
+  `/soc/base_fpga_region`, name the `.rbf`) for reference / customizing.
+- `fpga-overlay.service` — optional systemd unit to apply a design at boot.
+
+(Alternatively, put the `.rbf` on the FAT boot partition and load it from
+`u-boot.scr` at boot — that's how the GHRD `soc_system.rbf` is loaded.)
 
 ## Make it permanent (optional)
 

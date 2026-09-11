@@ -287,16 +287,18 @@ check: an uncompressed Cyclone~V (5CSEMA5) image is $\sim$7\,MB; a $\sim$2\,MB f
 is compressed.
 \end{warn}
 
-\begin{note}[Runtime reconfiguration from Linux]
-The Cyclone~V FPGA Manager can reconfigure the fabric at runtime from the HPS,
-driven by the kernel's FPGA-region / device-tree-overlay support (configfs). That
-interface was present on the older vendor Altera 4.5 kernel; on \emph{mainline}
-Linux 6.12 it may not be exposed. Before relying on it, check for
-\code{/sys/class/fpga\_manager/fpga0} and
-\code{/sys/kernel/config/device-tree/overlays} on your kernel --- if they are
-absent, use the boot-time U-Boot load above. The experimental helper scripts and
-overlays under \code{fpga/countdown/} show the overlay approach; the bitstream
-must be uncompressed either way.
+\begin{note}[Runtime reconfiguration from Linux (no reboot)]
+You can also reconfigure the fabric at runtime from the HPS. Mainline Linux has no
+built-in userspace overlay interface, so this image autoloads the \code{dtbocfg}
+module (providing \code{/sys/kernel/config/device-tree/overlays}) and ships
+\code{/usr/local/sbin/fpga-load.sh}. It stages an uncompressed \code{.rbf} to
+\code{/lib/firmware} and applies a device-tree overlay to
+\code{/soc/base\_fpga\_region}, so the FPGA Manager programs the fabric:
+\begin{lstlisting}
+sudo /usr/local/sbin/fpga-load.sh my_design.rbf
+cat /sys/class/fpga_manager/fpga0/state    # -> operating
+\end{lstlisting}
+The \code{.rbf} must be uncompressed either way. See \code{fpga/countdown/}.
 \end{note}
 This image is headless (no VGA frame buffer --- the mainline kernel has no
 \code{altvipfb} driver), so there is no running display to disturb when you change

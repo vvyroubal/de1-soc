@@ -1,0 +1,8 @@
+# out-of-tree module build artifacts
+*.o
+*.ko
+*.mod
+*.mod.c
+.*.cmd
+*.symvers
+modules.order
