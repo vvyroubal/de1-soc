@@ -35,7 +35,7 @@ korisnički prostor). \textbf{Quartus vam ne treba:} prevedeni FPGA bitstream
 \subsection{Opcija A --- izgradnja iz izvornog koda (ovaj repozitorij)}
 Na Debian/Ubuntu x86-64 računalu s pristupom internetu:
 \begin{lstlisting}
-git clone --recurse-submodules <url-spremista> DE1-SoC
+git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
 cd DE1-SoC/hps/newimage
 make deps      # jednokratno: instalira alate za izgradnju (koristi sudo/apt)
 make all       # gradi jezgru + Debian rootfs, sastavlja sliku

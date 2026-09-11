@@ -41,7 +41,7 @@ Clone the repo **with submodules** (the Linux kernel source is a shallow
 submodule pinned to `v6.12`), then build from source (no Quartus needed):
 
 ```bash
-git clone --recurse-submodules <repo-url> DE1-SoC
+git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
 cd DE1-SoC/hps/newimage
 make deps      # one-time: install host build tools (uses sudo/apt)
 make all       # build kernel + Debian rootfs, assemble the image
