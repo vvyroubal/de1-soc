@@ -68,14 +68,15 @@ kernel: fetch
 	grep -q 'socfpga_cyclone5_de1_soc.dtb' $(DTSDIR)/Makefile || \
 	  echo 'dtb-$$(CONFIG_ARCH_INTEL_SOCFPGA) += socfpga_cyclone5_de1_soc.dtb' >> $(DTSDIR)/Makefile
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) socfpga_defconfig
-	# Pin a clean "6.12.0" version: LOCALVERSION_AUTO is `default y`, so the
-	# defconfig alone doesn't disable it, and the build (which modifies the pinned
-	# submodule tree) would otherwise stamp a "-dirty" suffix.
+	# Pin a clean "6.12.0" version. The build modifies the pinned submodule tree
+	# (DTS/config copied in), which would otherwise stamp "-dirty": disable
+	# LOCALVERSION_AUTO (it's `default y`, so the defconfig alone doesn't) AND pass
+	# LOCALVERSION= (set-but-empty) so setlocalversion appends no scm/dirty suffix.
 	$(KDIR)/scripts/config --file $(KDIR)/.config --disable LOCALVERSION_AUTO
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) olddefconfig
-	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) -j$(JOBS) zImage modules dtbs
+	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) LOCALVERSION= -j$(JOBS) zImage modules dtbs
 	rm -rf $(HERE)/modules-staging
-	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) \
+	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) LOCALVERSION= \
 	  INSTALL_MOD_PATH=$(HERE)/modules-staging modules_install
 
 ## build the dtbocfg overlay-configfs module and stage it with the kernel modules
