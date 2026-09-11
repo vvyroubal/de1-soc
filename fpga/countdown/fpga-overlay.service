@@ -1,0 +1,16 @@
+[Unit]
+Description=Load FPGA bitstream into the fabric (apply device-tree overlay)
+Documentation=man:fpga-load.sh
+# /lib/firmware must be mounted; the FPGA region driver is built-in and ready
+# well before userspace, so local-fs is the only real dependency.
+After=local-fs.target
+Before=multi-user.target
+ConditionPathExists=/lib/firmware/fpga.rbf
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/fpga-load.sh --apply
+
+[Install]
+WantedBy=multi-user.target

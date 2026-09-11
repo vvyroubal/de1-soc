@@ -1,0 +1,78 @@
+# ==============================================================================
+# countdown.qsf  --  Quartus settings for the DE1-SoC countdown design
+# Device: Cyclone V SoC 5CSEMA5F31C6N (DE1-SoC)
+# Pin assignments are the standard DE1-SoC locations; verify against the
+# official DE1-SoC.qsf from the Terasic System CD if a signal doesn't light.
+# ==============================================================================
+
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEMA5F31C6
+set_global_assignment -name TOP_LEVEL_ENTITY countdown_top
+set_global_assignment -name VHDL_FILE countdown_top.vhd
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+
+# ---- 50 MHz clock ----
+set_location_assignment PIN_AF14 -to CLOCK_50
+
+# ---- Push buttons KEY[3:0] (active low) ----
+set_location_assignment PIN_AA14 -to KEY[0]
+set_location_assignment PIN_AA15 -to KEY[1]
+set_location_assignment PIN_W15  -to KEY[2]
+set_location_assignment PIN_Y16  -to KEY[3]
+
+# ---- HEX0 (units) ----
+set_location_assignment PIN_AE26 -to HEX0[0]
+set_location_assignment PIN_AE27 -to HEX0[1]
+set_location_assignment PIN_AE28 -to HEX0[2]
+set_location_assignment PIN_AG27 -to HEX0[3]
+set_location_assignment PIN_AF28 -to HEX0[4]
+set_location_assignment PIN_AG28 -to HEX0[5]
+set_location_assignment PIN_AH28 -to HEX0[6]
+
+# ---- HEX1 (tens) ----
+set_location_assignment PIN_AJ29 -to HEX1[0]
+set_location_assignment PIN_AH29 -to HEX1[1]
+set_location_assignment PIN_AH30 -to HEX1[2]
+set_location_assignment PIN_AG30 -to HEX1[3]
+set_location_assignment PIN_AF29 -to HEX1[4]
+set_location_assignment PIN_AF30 -to HEX1[5]
+set_location_assignment PIN_AD27 -to HEX1[6]
+
+# ---- HEX2 (hundreds) ----
+set_location_assignment PIN_AB23 -to HEX2[0]
+set_location_assignment PIN_AE29 -to HEX2[1]
+set_location_assignment PIN_AD29 -to HEX2[2]
+set_location_assignment PIN_AC28 -to HEX2[3]
+set_location_assignment PIN_AD30 -to HEX2[4]
+set_location_assignment PIN_AC29 -to HEX2[5]
+set_location_assignment PIN_AC30 -to HEX2[6]
+
+# ---- HEX3 (blank) ----
+set_location_assignment PIN_AD26 -to HEX3[0]
+set_location_assignment PIN_AC27 -to HEX3[1]
+set_location_assignment PIN_AD25 -to HEX3[2]
+set_location_assignment PIN_AC25 -to HEX3[3]
+set_location_assignment PIN_AB28 -to HEX3[4]
+set_location_assignment PIN_AB25 -to HEX3[5]
+set_location_assignment PIN_AB22 -to HEX3[6]
+
+# ---- HEX4 (blank) ----
+set_location_assignment PIN_AA24 -to HEX4[0]
+set_location_assignment PIN_Y23  -to HEX4[1]
+set_location_assignment PIN_Y24  -to HEX4[2]
+set_location_assignment PIN_W22  -to HEX4[3]
+set_location_assignment PIN_W24  -to HEX4[4]
+set_location_assignment PIN_V23  -to HEX4[5]
+set_location_assignment PIN_W25  -to HEX4[6]
+
+# ---- HEX5 (blank) ----
+set_location_assignment PIN_V25  -to HEX5[0]
+set_location_assignment PIN_AA28 -to HEX5[1]
+set_location_assignment PIN_Y27  -to HEX5[2]
+set_location_assignment PIN_AB27 -to HEX5[3]
+set_location_assignment PIN_AB26 -to HEX5[4]
+set_location_assignment PIN_AA26 -to HEX5[5]
+set_location_assignment PIN_AA25 -to HEX5[6]
+
+set_global_assignment -name LAST_QUARTUS_VERSION "25.1std.0 Lite Edition"

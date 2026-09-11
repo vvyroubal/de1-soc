@@ -1,0 +1,316 @@
+% --------------------------------------------------------------- Hrvatski -----
+\section*{Pregled}
+\addcontentsline{toc}{section}{Pregled}
+Vodič od nule za pokretanje modernog Linuxa na hard procesorskom sustavu (HPS)
+pločice DE1-SoC i dobivanje ljuske preko serijske veze i SSH-a --- temelj za
+ugradbeni i FPGA razvoj na pločici. Na kraju ćete imati \textbf{Debian 12
+(bookworm)} na \textbf{mainline Linuxu 6.12}, serijsku konzolu na
+\code{115200 8N1} i SSH pristup, uz FPGA programabilnu logiku konfiguriranu pri podizanju.
+Slika je bez grafičkog sučelja (headless); radite preko serijske konzole i SSH-a.
+
+\section{Što vam treba}
+Većina toga dolazi u kutiji; jedino što ćete možda morati nabaviti su microSD
+kartica i čitač kartica.
+\begin{itemize}
+  \item \textbf{DE1-SoC pločica + napajanje} --- 12\,V adapter (barrel-jack) isporučen s pločicom.
+  \item \textbf{microSD kartica, $\geq$ 2\,GB} --- slika je $\sim$1,8\,GB i raste do veličine kartice. Svi podaci na njoj bit će izbrisani.
+  \item \textbf{čitač microSD kartica} --- USB čitač ili ugrađeni utor.
+  \item \textbf{USB kabel (konzola)} --- za UART-to-USB priključak pločice (Silicon Labs CP210x most).
+  \item \textbf{Ethernet kabel} (opcionalno) --- na mrežu s DHCP-om, za SSH i internet.
+  \item \textbf{Linux računalo za izgradnju} (opcionalno) --- Debian/Ubuntu x86-64 stroj ako sliku želite izgraditi iz izvornog koda umjesto zapisati gotovu.
+\end{itemize}
+
+\noindent\textbf{Softver na vašem računalu:} alat za zapisivanje SD kartice
+(\href{https://etcher.balena.io/}{balenaEtcher}, ili \code{dd} na Linuxu/macOS-u);
+serijski terminal (minicom, picocom, screen; PuTTY ili Tera Term na Windowsu); te
+Silicon Labs CP210x VCP upravljački program ako vaš OS ne prepozna konzolni
+priključak automatski.
+
+\section{Nabavite sliku}
+Ovaj repozitorij gradi sliku iz izvornog koda --- Debian 12 + Linux 6.12 s hibridnim lancem
+podizanja (provjereni tvornički preloader/U-Boot uz mainline jezgru i Debian
+korisnički prostor). \textbf{Quartus vam ne treba:} prevedeni FPGA bitstream
+(\code{soc\_system.rbf}) nalazi se u repozitoriju.
+
+\subsection{Opcija A --- izgradnja iz izvornog koda (ovaj repozitorij)}
+Na Debian/Ubuntu x86-64 računalu s pristupom internetu:
+\begin{lstlisting}
+git clone --recurse-submodules <url-spremista> DE1-SoC
+cd DE1-SoC/hps/newimage
+make deps      # jednokratno: instalira alate za izgradnju (koristi sudo/apt)
+make all       # gradi jezgru + Debian rootfs, sastavlja sliku
+# rezultat: image/de1soc-debian12-6.12.img
+\end{lstlisting}
+Izvorni kod jezgre je plitki (shallow) git submodul vezan na oznaku \code{v6.12}; ako ste
+klonirali bez \code{-{}-recurse-submodules}, \code{make} ga inicijalizira za vas.
+Detalji su u \code{hps/newimage/README.md}.
+
+\subsection{Opcija B --- zapis gotove slike (release)}
+Ako je za projekt objavljena gotova slika (\code{de1soc-debian12-6.12.img.xz}),
+možete preskočiti izgradnju i zapisati je izravno (vidi sljedeći odjeljak).
+
+\begin{tip}[Zadržite referentnu kopiju]
+Provjereno-ispravnu sliku zadržite netaknutom kao referencu; uvijek zapisujte kopiju.
+\end{tip}
+
+\section{Zapišite microSD karticu}
+Zapišite cijelu \code{.img} datoteku na sirovu karticu --- ne na particiju i ne kao datoteke.
+\begin{warn}[Upozorenje o gubitku podataka]
+Zapisivanje prebrisuje cijeli ciljani uređaj. Odabir pogrešnog diska izbrisat će
+ga. Prepoznajte karticu po točnoj veličini i prvo odspojite druge vanjske diskove.
+Uz \code{dd}, svaki put dvaput provjerite naziv uređaja.
+\end{warn}
+
+\subsection{Opcija A --- balenaEtcher (svi OS-ovi)}
+\emph{Flash from file} \arr\ odaberite \code{.img} \arr\ \emph{Select target}
+(microSD kartica, potvrdite veličinu) \arr\ \emph{Flash}. Etcher automatski provjerava zapis.
+
+\subsection{Opcija B --- \code{dd} (Linux / macOS)}
+\begin{lstlisting}
+# Linux: pronadite karticu po velicini (npr. /dev/sdX ili /dev/mmcblkN)
+lsblk
+sudo umount /dev/sdX*        # odmontirajte automatski montirane particije
+sudo dd if=de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sync
+\end{lstlisting}
+\begin{lstlisting}
+# macOS: koristite sirovi rdisk cvor i prvo odmontirajte
+diskutil list
+diskutil unmountDisk /dev/diskN
+sudo dd if=de1soc-debian12-6.12.img of=/dev/rdiskN bs=4m
+sync
+\end{lstlisting}
+\begin{tip}[Provjera ispravnosti]
+Stvarno zapisivanje slike od $\sim$1,8\,GB traje minutama, ne sekundama. Ako se
+\code{dd} vrati gotovo istog trena, nije stigao do fizičke kartice --- ponovno
+provjerite naziv uređaja.
+\end{tip}
+
+\section{Postavite prekidač načina podizanja}
+DE1-SoC ima mali blok DIP prekidača (\code{SW10}) koji preko \code{MSEL[4:0]}
+pinova postavlja način konfiguracije FPGA-a. Linux slika zahtijeva da U-Boot
+konfigurira FPGA, pa svih pet MSEL bitova mora biti \textbf{0}.
+\begin{warn}[Obavezna postavka]
+Postavite \code{SW10} na \textbf{MSEL[4:0] = 00000} (svih pet MSEL pozicija na
+stranu ``0'' --- provjerite oznake na pločici / korisnički priručnik za smjer koji je 0).
+\end{warn}
+Pri podizanju U-Boot učitava FPGA dizajn (\code{soc\_system.rbf}) preko pasivnog
+(FPP) puta. U bilo kojem drugom MSEL načinu FPGA se sam konfigurira iz ugrađene
+flash memorije, dizajn se neće podudarati i jezgra se može zablokirati rano tijekom
+prepoznavanja uređaja. Podizanje HPS-a sa SD-a bira se zasebno (BSEL) i ne ovisi o MSEL-u.
+
+\section{Spojite i uključite}
+\begin{enumerate}
+  \item Umetnite microSD karticu u utor na donjoj strani pločice (HPS strana), do kraja.
+  \item Spojite konzolni USB kabel s UART-to-USB priključka pločice na računalo.
+  \item Opcionalno: spojite Ethernet kabel za SSH/mrežu.
+  \item Priključite napajanje --- ali otvorite serijski terminal (sljedeći odjeljak) \emph{prije} uključivanja, da uhvatite cijeli log podizanja.
+\end{enumerate}
+
+\section{Otvorite serijsku konzolu}
+HPS konzola radi na \textbf{115200 baud, 8N1, bez kontrole toka}. Prvo pronađite
+kao koji se priključak CP210x most prijavio:
+\begin{lstlisting}
+# Linux
+ls /dev/ttyUSB*        # ili: dmesg | grep -i cp210
+# macOS
+ls /dev/tty.usbserial* # ili /dev/tty.SLAB_USBtoUART
+# Windows: Upravitelj uredaja -> Ports (COM & LPT) -> Silicon Labs CP210x
+\end{lstlisting}
+\begin{tip}[Dva priključka?]
+Most je dvokanalni i prijavljuje \emph{dva} serijska priključka. HPS konzola je na
+jednom od njih (obično onom s nižim brojem, npr. \code{ttyUSB0}). Ako jedan ne
+prikazuje ništa pri podizanju, probajte drugi.
+\end{tip}
+\begin{lstlisting}
+minicom -b 115200 -D /dev/ttyUSB0
+picocom -b 115200 /dev/ttyUSB0
+screen /dev/ttyUSB0 115200
+# Windows: PuTTY -> Serial, COMn, 115200   (ili Tera Term)
+\end{lstlisting}
+\begin{note}[Napomena]
+Na Linuxu vaš korisnik treba pristup serijskom priključku:
+\code{sudo usermod -aG dialout \$USER}, zatim se odjavite i ponovno prijavite.
+\end{note}
+
+\section{Prvo podizanje i prijava}
+Uključite pločicu. Uz zapisanu karticu i MSEL na \code{00000}, sama se podiže kroz:
+Boot ROM \arr\ tvornički preloader (inicijalizacija SDRAM-a) \arr\ tvornički U-Boot
+(pokreće \code{u-boot.scr}: učitava FPGA dizajn, zatim jezgru) \arr\ jezgra \arr\
+Debian prijava. Trebali biste vidjeti:
+\begin{lstlisting}
+=== DE1-SoC Debian 12 / Linux 6.12 ===
+u-boot.scr: loading GHRD soc_system.rbf into the FPGA fabric
+FPGA configured with soc_system.rbf
+...
+de1-soc-debian login:
+\end{lstlisting}
+
+\medskip\noindent Prijavite se zadanim računom slike:
+\begin{lstlisting}
+korisnik: debian
+lozinka:  temppwd      # lozinka root racuna je takoder temppwd
+\end{lstlisting}
+\begin{warn}[Napravite ovo prvo]
+Odmah promijenite zadane lozinke naredbom \code{passwd} --- zadane vrijednosti su javno poznate.
+\end{warn}
+Pri prvom pokretanju, da korijenski datotečni sustav proširite na cijelu karticu:
+\begin{lstlisting}
+sudo /usr/local/sbin/expand-rootfs.sh && sudo reboot
+\end{lstlisting}
+
+\section{Mreža i SSH}
+\code{eth0} je postavljen na DHCP, a SSH poslužitelj se pokreće pri podizanju. Kad
+Ethernet dobije adresu, možete odspojiti serijski kabel.
+\begin{lstlisting}
+# na plocici
+ip addr show eth0            # potrazite inet adresu
+# s vaseg racunala
+ssh debian@de1-soc-debian    # po imenu racunala, ili koristite IP adresu
+\end{lstlisting}
+\begin{tip}[Nema DHCP-a / izravna veza?]
+Kod izravnog spajanja pločice na računalo: dodijelite statičke IP adrese na oba
+kraja veze (ista podmreža), postavite zadani pristupnik pločice na računalo te na
+uzlaznom sučelju računala omogućite IP prosljeđivanje + NAT za dijeljenje interneta.
+\end{tip}
+
+\section{U-Boot prompt}
+Rijetko vam treba, ali U-Boot je mjesto gdje mijenjate ponašanje podizanja ---
+argumente jezgre, učitavanje drugog FPGA dizajna, druge izvore podizanja.
+Pritisnite bilo koju tipku tijekom odbrojavanja ``Hit any key to stop autoboot'';
+pregledavajte i mijenjajte s \code{printenv}, \code{setenv}, \code{saveenv};
+nastavite s \code{boot}. Korijenski sustav je treća particija
+(\code{/dev/mmcblk0p3}); FAT boot particija je prva. \code{u-boot.scr} (učitan s
+FAT particije) postavlja \code{mmcroot} i učitava \code{soc\_system.rbf}, pa
+ponašanje podizanja obično mijenjate uređivanjem te skripte, a ne spremljenog okruženja.
+\begin{lstlisting}
+# pregledajte okruzenje / korijenski uredaj koji skripta odabire
+printenv mmcroot            # -> /dev/mmcblk0p3
+\end{lstlisting}
+
+\section{Cross-compile za pločicu}
+HPS je 32-bitni ARM Cortex-A9 koji pokreće hard-float Debian (armhf).
+\begin{lstlisting}
+# Debian/Ubuntu domacin: instalirajte lanac alata
+sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+arm-linux-gnueabihf-gcc --version
+\end{lstlisting}
+\begin{lstlisting}
+# prevedite, zatim kopirajte na plocicu i pokrenite
+arm-linux-gnueabihf-gcc -O2 -o hello hello.c
+scp hello debian@de1-soc-debian:~
+ssh debian@de1-soc-debian ./hello
+\end{lstlisting}
+\begin{note}[Uskladite s bibliotekama na cilju]
+Slika je Debian 12 (glibc 2.36). Gradite lancem alata iste ili starije generacije;
+puno noviji lanac alata može se povezati sa simbolima glibc-a kojih na pločici nema
+(\code{version 'GLIBC\_2.xx' not found} pri pokretanju). Za male alate povezujte
+statički (\code{-static}); za veće aplikacije gradite prema sysrootu kopiranom s
+pločice (\code{-{}-sysroot}). Na samoj pločici možete i jednostavno
+\code{apt install build-essential} te prevoditi izvorno.
+\end{note}
+Za izgradnju kernel modula koristite stablo izvornog koda jezgre koje gradi ovaj repozitorij
+(odgovara \code{6.12.0}):
+\begin{lstlisting}
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- \
+  -C hps/newimage/kernel/linux-6.12 M=$(pwd) modules
+\end{lstlisting}
+
+\section{Izradite vlastiti FPGA dizajn}
+Programabilna logika nalazi se u Cyclone~V SoC-u (\code{5CSEMA5F31C6}). Dizajnirajte je u Intel Quartus
+Prime s Platform Designerom, izvezite sirovi bitstream (\code{.rbf}) i stavite ga
+na karticu da U-Boot konfigurira FPGA pri podizanju. Referentni dizajn i recept
+koji je proizveo isporučeni \code{soc\_system.rbf} nalaze se u
+\code{fpga/hps\_ghrd/} (vidi njegov README).
+
+\subsection{Nabava alata}
+\begin{itemize}
+  \item \textbf{Quartus Prime Lite Edition} --- besplatno izdanje (bez potrebe za
+        licencom) koje podržava Cyclone~V. Preuzmite ga s dobavljačevog centra za
+        preuzimanje FPGA softvera: povijesno \emph{Intel FPGA Software Download
+        Center} (\code{fpgasoftware.intel.com}); otkako je Altera izdvojena iz
+        Intela (2024.--2025.) poslužuje se s \href{https://www.altera.com}{altera.com}
+        --- potražite ``Quartus Prime Lite download''. Tijekom instalacije uključite
+        \textbf{podršku za Cyclone~V uređaje}.
+  \item \textbf{Referentni dizajn (GHRD)} --- u ovom repozitoriju na
+        \code{fpga/hps\_ghrd/} i na DE1-SoC System CD-u; preporučena polazna točka.
+\end{itemize}
+\begin{note}[Quartus vam ne treba za pokretanje slike]
+Prevedeni bitstream nalazi se u repozitoriju
+(\code{hps/newimage/fpga/soc\_system.rbf}). Quartus je potreban samo za
+\emph{ponovnu izgradnju ili izmjenu} programabilne logike.
+\end{note}
+
+\begin{tip}[Krenite od referentnog dizajna]
+Nemojte kretati od praznog projekta. Golden Hardware Reference Design (GHRD) ---
+ispravan DE1-SoC projekt s točnim uređajem, top-level modulom, dodjelama pinova i
+HPS/DDR3 postavkom --- nalazi se u \code{fpga/hps\_ghrd/}. Mijenjajte njega umjesto
+da radite iznova. Potpuni recept \code{qsys-generate \arr\ compile \arr\
+quartus\_cpf} je u \code{fpga/hps\_ghrd/README.md}.
+\end{tip}
+\begin{lstlisting}
+# regenerirajte Qsys sustav, prevedite, pa pretvorite .sof -> sirovi NEKOMPRIMIRANI .rbf
+cd fpga/hps_ghrd
+qsys-generate de1_soc.qsys --synthesis=VERILOG
+quartus_sh --flow compile de1_soc_top_v2
+quartus_cpf -c -o bitstream_compression=off \
+  output_files_v2/de1_soc_top_v2.sof soc_system.rbf
+cp soc_system.rbf ../../hps/newimage/fpga/soc_system.rbf
+\end{lstlisting}
+Bitstream ide na FAT boot particiju kao \code{soc\_system.rbf}, kojeg učitava
+\code{u-boot.scr}. Zamjena kartice: isključite \arr\ kartica u čitač \arr\
+zamijenite \code{soc\_system.rbf} \arr\ kartica natrag \arr\ uključite. (Za
+MSEL=00000/FPP \code{.rbf} mora biti \textbf{nekomprimiran}, $\sim$7\,MB --- vidi
+upozorenje niže.)
+\begin{warn}[Držite bitstream i device tree usklađenima]
+Ako mijenjate koje periferije postoje ili njihove adrese, ažurirajte device tree
+jezgre (\code{socfpga.dtb} na FAT particiji). Jezgra čiji device tree upućuje na
+hardver u programabilnoj logici kojeg nema u učitanom bitstreamu može se zablokirati tijekom
+prepoznavanja upravljačkih programa.
+\end{warn}
+
+\section{Promjena FPGA programabilne logike}
+Podržan način postavljanja programabilne logike na ovoj slici je \textbf{pri podizanju}: U-Bootov
+\code{u-boot.scr} učitava \code{soc\_system.rbf} s FAT particije preko FPP puta. Da
+promijenite dizajn, zamijenite tu datoteku na FAT particiji (gore) i ponovno podignite sustav.
+
+\begin{warn}[\code{.rbf} mora biti nekomprimiran]
+Uz \code{MSEL=00000} HPS konfigurira FPGA preko pasivnog (FPP) puta, koji ima
+onemogućenu kompresiju. Komprimirani \code{.rbf}
+(\code{-o bitstream\_compression=on}) se prenese, ali ga FPGA ne može raspakirati,
+pa se konfiguracija nikad ne dovrši (\code{err=-110}). Generirajte ga nekomprimirano:
+\code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}.
+Provjera: nekomprimirana Cyclone~V (5CSEMA5) slika je $\sim$7\,MB; datoteka od
+$\sim$2\,MB je komprimirana.
+\end{warn}
+
+\begin{note}[Rekonfiguracija iz Linuxa tijekom rada]
+Cyclone~V FPGA Manager može rekonfigurirati programabilnu logiku tijekom rada iz HPS-a, vođen
+podrškom jezgre za FPGA regije / device-tree overlay (configfs). To je sučelje
+postojalo na starijoj tvorničkoj Altera 4.5 jezgri; na \emph{mainline} Linuxu 6.12
+možda nije izloženo. Prije nego se oslonite na njega, provjerite postoje li
+\code{/sys/class/fpga\_manager/fpga0} i
+\code{/sys/kernel/config/device-tree/overlays} na vašoj jezgri --- ako ih nema,
+koristite učitavanje pri podizanju preko U-Boota (gore). Eksperimentalne pomoćne
+skripte i overlayi pod \code{fpga/countdown/} pokazuju pristup s overlayem;
+bitstream mora biti nekomprimiran u svakom slučaju.
+\end{note}
+Ova slika je bez grafičkog sučelja (nema VGA framebuffera --- mainline jezgra nema
+\code{altvipfb} upravljački program), pa nema aktivnog prikaza koji bi se poremetio
+pri promjeni programabilne logike, kakav je postojao na staroj desktop slici.
+
+\section{Rješavanje problema}
+\begin{longtable}{@{}p{0.36\linewidth} p{0.58\linewidth}@{}}
+\toprule
+\textbf{Simptom} & \textbf{Vjerojatni uzrok i rješenje} \\ \midrule
+Ništa na serijskoj konzoli & Pogrešan priključak (probajte drugi CP210x kanal, npr. \code{ttyUSB1}), pogrešan baud (mora biti 115200), niste u grupi \code{dialout}, upravljački program nije instaliran ili je kabel u krivom USB priključku. \\ \addlinespace
+Iskrivljeni znakovi & Nepodudaranje bauda --- postavite točno 115200 8N1, bez kontrole toka. \\ \addlinespace
+U-Boot radi, zaglavi se odmah nakon \code{Starting kernel...} & MSEL nije \code{00000}, pa FPGA-u nedostaje dizajn koji jezgra očekuje. Postavite \code{MSEL[4:0]=00000} i ponovno uključite. \\ \addlinespace
+Nema podizanja / vrti se u krug / ``card did not respond'' & Slika nije ispravno zapisana. Ponovno zapišite i provjerite; potvrdite da je kartica do kraja umetnuta. \\ \addlinespace
+\code{hostnamectl}: ``Failed to connect to bus'' & D-Bus ne radi --- na starijoj slici: \code{sudo apt install -y dbus}; trenutna slika ga već uključuje. \\ \addlinespace
+\code{journalctl}: ``insufficient permissions'' & \code{sudo usermod -aG systemd-journal debian} i ponovna prijava (trenutna slika to već radi). \\ \addlinespace
+Sat/vrijeme je netočno & Pločica nema RTC; vrijeme se postavlja preko NTP-a kad dobije mrežu (systemd-timesyncd). \\ \addlinespace
+\code{err=-110} pri primjeni FPGA Managera & \code{.rbf} je komprimiran. Ponovno generirajte nekomprimirano: \code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}. \\ \addlinespace
+Nema IP adrese na \code{eth0} & Provjerite ima li mreža DHCP; provjerite \code{ip addr} ili postavite statičku adresu. \\
+\bottomrule
+\end{longtable}

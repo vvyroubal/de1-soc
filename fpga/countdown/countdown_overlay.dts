@@ -1,0 +1,24 @@
+/dts-v1/;
+/plugin/;
+
+/*
+ * Device-tree overlay to reconfigure the FPGA from Linux (HPS) at runtime.
+ * Applying it makes the base FPGA region program the named bitstream via the
+ * FPGA Manager. The counter is self-contained (no HPS-facing peripherals), so
+ * no child device nodes are needed here.
+ *
+ * The bitstream file must be in /lib/firmware/ on the board.
+ */
+
+/ {
+    fragment@0 {
+        target-path = "/soc/base-fpga-region";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <1>;
+            firmware-name = "countdown.rbf";
+        };
+    };
+};

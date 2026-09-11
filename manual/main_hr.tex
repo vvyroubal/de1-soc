@@ -1,0 +1,46 @@
+% =============================================================================
+%  DE1-SoC priručnik za postavljanje -- hrvatsko izdanje
+%  (gradnja: latexmk -pdf main_hr.tex)
+% =============================================================================
+\input{preamble}
+
+\begin{document}
+\selectlanguage{croatian}
+
+\vukatitlepage{Terasic DE1-SoC\\Priru\v cnik za postavljanje}%
+  {Podizanje Linuxa na Cyclone~V HPS-u --- od SD kartice do ljuske}%
+  {Izra\dj eno na Veleu\v cili\v stu u Karlovcu}
+
+% ---- kolofon ----------------------------------------------------------------
+\thispagestyle{empty}
+\vspace*{1.5cm}
+\noindent\vukawordmarkdark
+\vspace{1.8cm}
+
+\noindent{\bfseries\color{vukapurple}\Large O ovom priru\v cniku}\\[6pt]
+\noindent Prakti\v cni vodi\v c za podizanje Linuxa na hard procesorskom sustavu
+Terasic DE1-SoC i njegovu uporabu za ugradbeni i FPGA razvoj --- zapisivanje
+kartice, serijska konzola, prvo podizanje, cross-compile te izrada i
+rekonfiguracija vlastitih FPGA dizajna.
+\vspace{1.0cm}
+
+\noindent\begin{tabular}{@{}p{3.2cm}l@{}}
+\textbf{Autor} & \ManualAuthor \\[2pt]
+\textbf{Kontakt} & \ManualEmail \\[2pt]
+\textbf{Ustanova} & \ManualInstHR \\
+ & {\small\color{vukaslate}\ManualInstEN} \\[2pt]
+\textbf{Adresa} & \ManualAddr \\[2pt]
+\textbf{Datum} & \today \\
+\end{tabular}
+\vspace{1.1cm}
+
+\noindent{\color{vukapurple}\rule{4cm}{1.2pt}}\\[6pt]
+\noindent\emph{Izra\dj eno na Veleu\v cili\v stu u Karlovcu (\ManualInstEN).}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\input{content_hr}
+
+\end{document}

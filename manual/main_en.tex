@@ -1,0 +1,45 @@
+% =============================================================================
+%  DE1-SoC Setup Manual  --  English edition   (build: latexmk -pdf main_en.tex)
+% =============================================================================
+\input{preamble}
+
+\begin{document}
+\selectlanguage{english}
+
+\vukatitlepage{Terasic DE1-SoC\\Setup Manual}%
+  {Booting Linux on the Cyclone~V HPS --- from SD card to a shell}%
+  {Created at \ManualInstEN}
+
+% ---- colophon ---------------------------------------------------------------
+\thispagestyle{empty}
+\vspace*{1.5cm}
+\noindent\vukawordmarkdark
+\vspace{1.8cm}
+
+\noindent{\bfseries\color{vukapurple}\Large About this manual}\\[6pt]
+\noindent A practical guide to bringing up Linux on the Terasic DE1-SoC hard
+processor system and using it for embedded and FPGA development --- flashing the
+card, the serial console, first boot, cross-compilation, and building and
+reconfiguring your own FPGA designs.
+\vspace{1.0cm}
+
+\noindent\begin{tabular}{@{}p{3.2cm}l@{}}
+\textbf{Author} & \ManualAuthor \\[2pt]
+\textbf{Contact} & \ManualEmail \\[2pt]
+\textbf{Institution} & \ManualInstEN \\
+ & {\small\color{vukaslate}\ManualInstHR} \\[2pt]
+\textbf{Address} & \ManualAddr \\[2pt]
+\textbf{Date} & \today \\
+\end{tabular}
+\vspace{1.1cm}
+
+\noindent{\color{vukapurple}\rule{4cm}{1.2pt}}\\[6pt]
+\noindent\emph{Created at \ManualInstEN{} (\ManualInstHR).}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\input{content_en}
+
+\end{document}

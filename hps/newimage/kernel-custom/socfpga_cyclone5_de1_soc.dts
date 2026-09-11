@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Terasic DE1-SoC (Cyclone V SoC, 5CSEMA5F31C6)
+ *
+ * Ported to mainline for the VUKA DE1-SoC image build. HPS peripherals follow
+ * the DE0-Nano-SoC (same SoC family); board specifics (1 GB DDR3, gmac1 RGMII
+ * skews) come from Terasic / U-Boot DE1-SoC support. The FPGA fabric (GHRD /
+ * soc_system.rbf, loaded by U-Boot) is reached through the FPGA manager, bridges
+ * and base FPGA region already defined in socfpga.dtsi; runtime reconfiguration
+ * uses the configfs device-tree-overlay flow.
+ */
+/dts-v1/;
+#include "socfpga_cyclone5.dtsi"
+
+/ {
+	model = "Terasic DE1-SoC";
+	compatible = "terasic,de1-soc", "altr,socfpga-cyclone5", "altr,socfpga";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@0 {
+		name = "memory";
+		device_type = "memory";
+		reg = <0x0 0x40000000>; /* 1 GB */
+	};
+
+	aliases {
+		ethernet0 = &gmac1;
+	};
+
+	regulator_3_3v: regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};
+
+&gmac1 {
+	status = "okay";
+	phy-mode = "rgmii";
+
+	rxd0-skew-ps = <420>;
+	rxd1-skew-ps = <420>;
+	rxd2-skew-ps = <420>;
+	rxd3-skew-ps = <420>;
+	txen-skew-ps = <0>;
+	txc-skew-ps = <1860>;
+	rxdv-skew-ps = <420>;
+	rxc-skew-ps = <1680>;
+
+	max-frame-size = <3800>;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpio2 {
+	status = "okay";
+};
+
+&mmc0 {
+	vmmc-supply = <&regulator_3_3v>;
+	vqmmc-supply = <&regulator_3_3v>;
+	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&usb1 {
+	status = "okay";
+};
+
+&watchdog0 {
+	status = "okay";
+};
+
+/* Note: fpgamgr0 and base_fpga_region are enabled by default in socfpga.dtsi,
+ * so the GHRD fabric is reconfigurable at runtime via configfs DT overlays. */

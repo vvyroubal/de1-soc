@@ -1,0 +1,80 @@
+# =============================================================================
+#  DE1-SoC project .gitignore
+#  Keeps sources (HDL, Qsys, constraints, scripts, LaTeX, docs); excludes large
+#  binary images, tool build artifacts, and regenerated outputs.
+# =============================================================================
+
+# ---- large binary images (reference + built SD-card images) -----------------
+*.img
+*.zip
+*.7z
+*.gz
+*.xz
+
+# ---- U-Boot / HPS build tree (regenerated) ----------------------------------
+/hps/sdcard/build/
+
+# ---- Quartus / FPGA build artifacts ------------------------------------------
+db/
+incremental_db/
+.qsys_edit/
+simulation/
+greybox_tmp/
+hc_output/
+hps_isw_handoff/
+output_files/
+output_files_*/
+*.qws
+*.rpt
+*.summary
+*.pin
+*.jdi
+*.sld
+*.done
+*.smsg
+*.qar
+*.qarlog
+*.dpf
+*.bak
+*.orig
+*.sof
+*.pof
+*.jic
+*.rbf
+*.sopcinfo
+
+# Qsys-generated system directory (regenerated from de1_soc.qsys)
+/fpga/hps_ghrd/de1_soc/
+
+# ---- compiled device-tree blobs (regenerated from *.dts) --------------------
+*.dtbo
+*.dtb
+
+# ---- LaTeX build artifacts (keep .tex / .pdf) -------------------------------
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# ---- editor / OS junk -------------------------------------------------------
+*~
+*.swp
+.DS_Store
+
+# ---- local tooling ----------------------------------------------------------
+.claude/
+graphify-out/
+
+# ---- hps/newimage: exclude large downloaded/generated trees -----------------
+#   Keep the build recipe (scripts), boot scripts, legal bundle, and the two
+#   custom kernel files (force-added); drop the multi-GB vendored trees.
+/hps/newimage/kernel/
+/hps/newimage/rootfs/
+/hps/newimage/modules-staging/
+# Track two large-but-essential binaries so a fresh clone builds with no Quartus
+# and ships GPL-compliant (corresponding U-Boot source) with no extra fetch:
+!/hps/newimage/fpga/soc_system.rbf
+!/hps/newimage/legal/source/u-boot-socfpga-ACDS16.0.tar.gz

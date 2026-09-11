@@ -1,0 +1,319 @@
+% ---------------------------------------------------------------- English -----
+\section*{Overview}
+\addcontentsline{toc}{section}{Overview}
+A from-scratch guide to running modern Linux on the DE1-SoC's hard processor
+system (HPS) and reaching a shell over serial and SSH --- the foundation for
+embedded and FPGA development on the board. You will end up with \textbf{Debian
+12 (bookworm)} on \textbf{mainline Linux 6.12}, a serial console at
+\code{115200 8N1}, and SSH access, with the FPGA fabric configured at boot. The
+image is headless (no graphical desktop); you work over the serial console and
+SSH.
+
+\section{What you need}
+Most of this ships in the box; the only items you may need to source are a
+microSD card and a card reader.
+
+\begin{itemize}
+  \item \textbf{DE1-SoC board + PSU} --- the 12\,V barrel-jack adapter included with the board.
+  \item \textbf{microSD card, $\geq$ 2\,GB} --- the image ships $\sim$1.8\,GB and grows to fill the card. All data on it will be erased.
+  \item \textbf{microSD card reader} --- USB reader or a built-in slot.
+  \item \textbf{USB cable (console)} --- for the board's UART-to-USB port (Silicon Labs CP210x bridge).
+  \item \textbf{Ethernet cable} (optional) --- to a network with DHCP, for SSH and internet.
+  \item \textbf{Linux build host} (optional) --- a Debian/Ubuntu x86-64 machine if you want to build the image from source rather than flash a prebuilt one.
+\end{itemize}
+
+\noindent\textbf{Software on your computer:} an SD-card writer
+(\href{https://etcher.balena.io/}{balenaEtcher}, or \code{dd} on Linux/macOS); a
+serial terminal (minicom, picocom, screen; PuTTY or Tera Term on Windows); and
+the Silicon Labs CP210x VCP driver if your OS does not detect the console port
+automatically.
+
+\section{Get the image}
+This repository builds the image from source --- Debian 12 + Linux 6.12 with a
+vendor-hybrid boot chain (the proven vendor preloader/U-Boot plus a mainline
+kernel and Debian userspace). \textbf{You do not need Quartus:} the compiled FPGA
+bitstream (\code{soc\_system.rbf}) is committed.
+
+\subsection{Option A --- build from source (this repo)}
+On a Debian/Ubuntu x86-64 host with an internet connection:
+\begin{lstlisting}
+git clone --recurse-submodules <repo-url> DE1-SoC
+cd DE1-SoC/hps/newimage
+make deps      # one-time: install the host build tools (uses sudo/apt)
+make all       # build kernel + Debian rootfs, assemble the image
+# result: image/de1soc-debian12-6.12.img
+\end{lstlisting}
+The Linux kernel source is a shallow git submodule pinned to \code{v6.12}; if you
+cloned without \code{-{}-recurse-submodules}, \code{make} initialises it for you.
+See \code{hps/newimage/README.md} for details.
+
+\subsection{Option B --- flash a prebuilt release}
+If a release image (\code{de1soc-debian12-6.12.img.xz}) is published for the
+project, you can skip the build and flash it directly (see the next section).
+
+\begin{tip}[Keep a reference copy]
+Keep a known-good image untouched as a reference; always flash a copy.
+\end{tip}
+
+\section{Flash the microSD card}
+Write the whole \code{.img} to the raw card --- not to a partition, and not as files.
+
+\begin{warn}[Data-loss warning]
+Flashing overwrites the entire target device. Selecting the wrong disk erases it.
+Identify the card by its exact size and unplug other external drives first. With
+\code{dd}, double-check the device name every time.
+\end{warn}
+
+\subsection{Option A --- balenaEtcher (any OS)}
+\emph{Flash from file} \arr\ select the \code{.img} \arr\ \emph{Select target} (the
+microSD card, confirm the size) \arr\ \emph{Flash}. Etcher verifies automatically.
+
+\subsection{Option B --- \code{dd} (Linux / macOS)}
+\begin{lstlisting}
+# Linux: find the card by size (e.g. /dev/sdX or /dev/mmcblkN)
+lsblk
+sudo umount /dev/sdX*        # unmount any auto-mounted partitions
+sudo dd if=de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sync
+\end{lstlisting}
+\begin{lstlisting}
+# macOS: note the raw rdisk node, and unmount first
+diskutil list
+diskutil unmountDisk /dev/diskN
+sudo dd if=de1soc-debian12-6.12.img of=/dev/rdiskN bs=4m
+sync
+\end{lstlisting}
+\begin{tip}[Sanity check]
+A genuine write of a $\sim$1.8\,GB image takes minutes, not seconds. If \code{dd}
+returns almost instantly, it did not reach the physical card --- re-check the device name.
+\end{tip}
+
+\section{Set the boot-mode switch}
+The DE1-SoC has a small DIP switch bank (\code{SW10}) that sets the FPGA
+configuration mode via the \code{MSEL[4:0]} pins. The Linux image needs U-Boot to
+configure the FPGA, so all five MSEL bits must be \textbf{0}.
+\begin{warn}[Required setting]
+Set \code{SW10} to \textbf{MSEL[4:0] = 00000} (all five MSEL positions to the ``0''
+side --- check the board silkscreen / user manual for which direction is 0).
+\end{warn}
+At boot, U-Boot loads the FPGA design (\code{soc\_system.rbf}) over the passive
+(FPP) path. In any other MSEL mode the FPGA self-configures from on-board flash,
+the design will not match, and the kernel can hang early during device probe. HPS
+boot from SD is selected separately (BSEL) and is unaffected by MSEL.
+
+\section{Connect and power on}
+\begin{enumerate}
+  \item Insert the microSD card into the slot on the underside of the board (HPS side), pushed fully home.
+  \item Connect the console USB cable from the board's UART-to-USB port to your computer.
+  \item Optional: connect an Ethernet cable for SSH/networking.
+  \item Plug in power --- but open your serial terminal (next section) \emph{before} switching on, so you catch the full boot log.
+\end{enumerate}
+
+\section{Open the serial console}
+The HPS console runs at \textbf{115200 baud, 8N1, no flow control}. First find
+which port the CP210x bridge enumerated as:
+\begin{lstlisting}
+# Linux
+ls /dev/ttyUSB*        # or: dmesg | grep -i cp210
+# macOS
+ls /dev/tty.usbserial* # or /dev/tty.SLAB_USBtoUART
+# Windows: Device Manager -> Ports (COM & LPT) -> Silicon Labs CP210x
+\end{lstlisting}
+\begin{tip}[Two ports?]
+The bridge is dual-channel and enumerates \emph{two} serial ports. The HPS console
+is on one of them (commonly the lower-numbered, e.g. \code{ttyUSB0}). If one shows
+nothing on boot, try the other.
+\end{tip}
+\begin{lstlisting}
+minicom -b 115200 -D /dev/ttyUSB0
+picocom -b 115200 /dev/ttyUSB0
+screen /dev/ttyUSB0 115200
+# Windows: PuTTY -> Serial, COMn, 115200   (or Tera Term)
+\end{lstlisting}
+\begin{note}
+On Linux your user needs serial access: \code{sudo usermod -aG dialout \$USER},
+then log out and back in.
+\end{note}
+
+\section{First boot and login}
+Switch the board on. With the card flashed and MSEL at \code{00000}, it autoboots
+through: Boot ROM \arr\ vendor preloader (SDRAM init) \arr\ vendor U-Boot (runs
+\code{u-boot.scr}: loads the FPGA design, then the kernel) \arr\ kernel \arr\
+Debian login. You should see:
+\begin{lstlisting}
+=== DE1-SoC Debian 12 / Linux 6.12 ===
+u-boot.scr: loading GHRD soc_system.rbf into the FPGA fabric
+FPGA configured with soc_system.rbf
+...
+de1-soc-debian login:
+\end{lstlisting}
+
+\medskip\noindent Sign in with the image's default account:
+\begin{lstlisting}
+user: debian
+pass: temppwd      # the root account password is also temppwd
+\end{lstlisting}
+\begin{warn}[Do this first]
+Change the default passwords immediately with \code{passwd} --- the defaults are
+public knowledge.
+\end{warn}
+First run, to grow the root filesystem to fill the card:
+\begin{lstlisting}
+sudo /usr/local/sbin/expand-rootfs.sh && sudo reboot
+\end{lstlisting}
+
+\section{Networking and SSH}
+\code{eth0} is configured for DHCP and an SSH server starts at boot. Once Ethernet
+has an address you can drop the serial cable.
+\begin{lstlisting}
+# on the board
+ip addr show eth0            # look for an inet address
+# from your computer
+ssh debian@de1-soc-debian    # by hostname, or use the IP address
+\end{lstlisting}
+\begin{tip}[No DHCP / direct link?]
+Connecting the board straight to a computer: assign static IPs on both ends of the
+link (same subnet), set the board's default gateway to the computer, and enable IP
+forwarding + NAT on the computer's uplink to share its internet.
+\end{tip}
+
+\section{The U-Boot prompt}
+You rarely need it, but U-Boot is where you change boot behaviour --- kernel
+arguments, loading a different FPGA design, alternate boot sources. Press any key
+during the ``Hit any key to stop autoboot'' countdown; inspect and change with
+\code{printenv}, \code{setenv}, \code{saveenv}; resume with \code{boot}.
+The rootfs is the third partition (\code{/dev/mmcblk0p3}); the FAT boot partition
+is the first. \code{u-boot.scr} (sourced from the FAT partition) sets
+\code{mmcroot} and loads \code{soc\_system.rbf}, so you normally change boot
+behaviour by editing that script rather than the saved environment.
+\begin{lstlisting}
+# inspect the environment / the root device the script selects
+printenv mmcroot            # -> /dev/mmcblk0p3
+\end{lstlisting}
+
+\section{Cross-compile for the board}
+The HPS is a 32-bit ARM Cortex-A9 running hard-float Debian (armhf).
+\begin{lstlisting}
+# Debian/Ubuntu host: install the toolchain
+sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+arm-linux-gnueabihf-gcc --version
+\end{lstlisting}
+\begin{lstlisting}
+# compile, then copy to the board and run
+arm-linux-gnueabihf-gcc -O2 -o hello hello.c
+scp hello debian@de1-soc-debian:~
+ssh debian@de1-soc-debian ./hello
+\end{lstlisting}
+\begin{note}[Match the target's libraries]
+The image is Debian 12 (glibc 2.36). Build with a toolchain of the same era or
+older; a much newer cross-toolchain can link against glibc symbols the board lacks
+(\code{version 'GLIBC\_2.xx' not found} at runtime). For small tools link
+statically (\code{-static}); for larger apps build against a sysroot copied from
+the board (\code{-{}-sysroot}). On the board itself you can also just
+\code{apt install build-essential} and compile natively.
+\end{note}
+To build a kernel module, use the kernel source tree this repo builds (matching
+\code{6.12.0}):
+\begin{lstlisting}
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- \
+  -C hps/newimage/kernel/linux-6.12 M=$(pwd) modules
+\end{lstlisting}
+
+\section{Build your own FPGA design}
+The fabric is a Cyclone V SoC (\code{5CSEMA5F31C6}). Design it in Intel Quartus
+Prime with Platform Designer, export a raw bitstream (\code{.rbf}), and place it on
+the card so U-Boot configures the FPGA at boot. The reference design and the
+recipe that produced the shipped \code{soc\_system.rbf} are in
+\code{fpga/hps\_ghrd/} (see its README).
+
+\subsection{Getting the tools}
+\begin{itemize}
+  \item \textbf{Quartus Prime Lite Edition} --- the free edition (no license
+        required) that supports Cyclone~V. Download it from the vendor's FPGA
+        software download center: historically the \emph{Intel FPGA Software
+        Download Center} (\code{fpgasoftware.intel.com}); since Altera was spun
+        back out of Intel (2024--2025) it is served from
+        \href{https://www.altera.com}{altera.com} --- search ``Quartus Prime Lite
+        download''. During installation, include \textbf{Cyclone~V device support}.
+  \item \textbf{Reference design (GHRD)} --- in this repo at
+        \code{fpga/hps\_ghrd/}, and on the DE1-SoC System CD; the recommended
+        starting point.
+\end{itemize}
+\begin{note}[You do not need Quartus to run the OS image]
+The compiled bitstream is committed (\code{hps/newimage/fpga/soc\_system.rbf}).
+Quartus is only needed to \emph{rebuild or modify} the fabric.
+\end{note}
+
+\begin{tip}[Start from the reference design]
+Do not begin from a blank project. The Golden Hardware Reference Design (GHRD) ---
+a working DE1-SoC project with the correct device, top-level, pin assignments, and
+HPS/DDR3 setup --- is in \code{fpga/hps\_ghrd/}. Modify it rather than recreate it.
+See \code{fpga/hps\_ghrd/README.md} for the full \code{qsys-generate \arr\ compile
+\arr\ quartus\_cpf} recipe.
+\end{tip}
+\begin{lstlisting}
+# regenerate the Qsys system, compile, then convert .sof -> raw UNCOMPRESSED .rbf
+cd fpga/hps_ghrd
+qsys-generate de1_soc.qsys --synthesis=VERILOG
+quartus_sh --flow compile de1_soc_top_v2
+quartus_cpf -c -o bitstream_compression=off \
+  output_files_v2/de1_soc_top_v2.sof soc_system.rbf
+cp soc_system.rbf ../../hps/newimage/fpga/soc_system.rbf
+\end{lstlisting}
+The bitstream lives on the FAT boot partition as \code{soc\_system.rbf}, loaded by
+\code{u-boot.scr}. Card-swap: power off \arr\ card to reader \arr\ replace
+\code{soc\_system.rbf} \arr\ card back \arr\ power on. (For MSEL=00000/FPP the
+\code{.rbf} must be \textbf{uncompressed}, $\sim$7\,MB --- see the warning below.)
+\begin{warn}[Keep the bitstream and device tree in sync]
+If you change which peripherals exist or their addresses, update the kernel device
+tree (\code{socfpga.dtb} on the FAT partition) to match. A kernel whose device tree
+references fabric hardware that is not in the loaded bitstream can hang during
+driver probe.
+\end{warn}
+
+\section{Changing the FPGA fabric}
+The supported way to set the fabric on this image is \textbf{at boot}: U-Boot's
+\code{u-boot.scr} loads \code{soc\_system.rbf} from the FAT partition over the FPP
+path. To change the design, replace that file on the FAT partition (above) and
+reboot.
+
+\begin{warn}[The \code{.rbf} must be uncompressed]
+With \code{MSEL=00000} the HPS configures the FPGA over the passive (FPP) path,
+which has compression disabled. A compressed \code{.rbf}
+(\code{-o bitstream\_compression=on}) streams in but the FPGA cannot expand it, so
+configuration never completes (\code{err=-110}). Generate it uncompressed:
+\code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}. Sanity
+check: an uncompressed Cyclone~V (5CSEMA5) image is $\sim$7\,MB; a $\sim$2\,MB file
+is compressed.
+\end{warn}
+
+\begin{note}[Runtime reconfiguration from Linux]
+The Cyclone~V FPGA Manager can reconfigure the fabric at runtime from the HPS,
+driven by the kernel's FPGA-region / device-tree-overlay support (configfs). That
+interface was present on the older vendor Altera 4.5 kernel; on \emph{mainline}
+Linux 6.12 it may not be exposed. Before relying on it, check for
+\code{/sys/class/fpga\_manager/fpga0} and
+\code{/sys/kernel/config/device-tree/overlays} on your kernel --- if they are
+absent, use the boot-time U-Boot load above. The experimental helper scripts and
+overlays under \code{fpga/countdown/} show the overlay approach; the bitstream
+must be uncompressed either way.
+\end{note}
+This image is headless (no VGA frame buffer --- the mainline kernel has no
+\code{altvipfb} driver), so there is no running display to disturb when you change
+the fabric, as there was on the old desktop image.
+
+\section{Troubleshooting}
+\begin{longtable}{@{}p{0.36\linewidth} p{0.58\linewidth}@{}}
+\toprule
+\textbf{Symptom} & \textbf{Likely cause \& fix} \\ \midrule
+Nothing on the serial console & Wrong port (try the other CP210x channel, e.g. \code{ttyUSB1}), wrong baud (must be 115200), not in the \code{dialout} group, driver not installed, or cable in the wrong USB jack. \\ \addlinespace
+Garbled characters & Baud mismatch --- set exactly 115200 8N1, no flow control. \\ \addlinespace
+U-Boot runs, freezes just after \code{Starting kernel...} & MSEL is not \code{00000}, so the FPGA lacks the design the kernel expects. Set \code{MSEL[4:0]=00000} and power-cycle. \\ \addlinespace
+No boot / boot loops / ``card did not respond'' & Image not written correctly. Re-flash and verify; confirm the card is fully seated. \\ \addlinespace
+\code{hostnamectl}: ``Failed to connect to bus'' & D-Bus not running --- on an older image: \code{sudo apt install -y dbus}; the current image includes it. \\ \addlinespace
+\code{journalctl}: ``insufficient permissions'' & \code{sudo usermod -aG systemd-journal debian} and re-login (the current image already does this). \\ \addlinespace
+Clock/time is wrong & The board has no RTC; it sets over NTP once networked (systemd-timesyncd). \\ \addlinespace
+\code{err=-110} on FPGA Manager apply & The \code{.rbf} is compressed. Regenerate uncompressed: \code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}. \\ \addlinespace
+No IP on \code{eth0} & Ensure the network has DHCP; check \code{ip addr}, or set a static address. \\
+\bottomrule
+\end{longtable}

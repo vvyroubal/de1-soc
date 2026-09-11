@@ -1,0 +1,139 @@
+% =============================================================================
+%  Shared preamble for the DE1-SoC manual (English and Croatian editions).
+%  Visual identity follows the Veleuciliste u Karlovcu (VUKA) brand standards:
+%  primary Pantone 235 C purple + Pantone 124 C gold; grotesk (Helvetica-like)
+%  typography; secondary palette used for callouts.
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[croatian,english]{babel}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+
+% ---- typography: TeX Gyre Heros (Helvetica clone ~ Neue Haas Grotesk) --------
+\usepackage{tgheros}
+\usepackage{inconsolata}                 % clean monospace for code
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+% ---- VUKA brand palette -----------------------------------------------------
+\definecolor{vukapurple}{RGB}{132,11,85}   % Pantone 235 C  (primary)
+\definecolor{vukagold}{RGB}{234,170,0}     % Pantone 124 C  (primary)
+\definecolor{vukaslate}{RGB}{91,103,112}   % Pantone 431 C  (secondary)
+\definecolor{vukared}{RGB}{161,43,47}      % Pantone 704 C  (secondary)
+\definecolor{vukagreen}{RGB}{0,105,55}     % Pantone 349 C  (secondary)
+\definecolor{codebg}{RGB}{244,241,236}
+\definecolor{codeframe}{RGB}{210,203,193}
+\definecolor{comment}{RGB}{124,140,133}
+\definecolor{ink}{RGB}{28,24,28}
+
+\hypersetup{colorlinks=true,linkcolor=vukapurple,urlcolor=vukapurple,citecolor=vukapurple}
+
+\setlength{\emergencystretch}{2.5em}   % absorb minor justification overflows
+
+% ---- author / institution (edit here) ---------------------------------------
+\newcommand{\ManualAuthor}{Vedran Vyroubal}
+% Obfuscated (no `@`) to reduce automated address harvesting from the public PDF.
+\newcommand{\ManualEmail}{vedran.vyroubal [at] vuka.hr}
+\newcommand{\ManualInstHR}{Veleu\v cili\v ste u Karlovcu}
+\newcommand{\ManualInstEN}{Karlovac University of Applied Sciences}
+\newcommand{\ManualAddr}{Trg J.\,J.~Strossmayera 9, 47000 Karlovac, Hrvatska}
+
+% ---- wordmarks --------------------------------------------------------------
+\newcommand{\vukawordmarklight}{% for dark (purple) backgrounds
+  {\bfseries\color{vukagold}\Large VELEU\v CILI\v STE U KARLOVCU}\\[2pt]
+  {\color{white}\normalsize Karlovac University of Applied Sciences}%
+}
+\newcommand{\vukawordmarkdark}{% for light backgrounds
+  {\bfseries\color{vukapurple}\large VELEU\v CILI\v STE U KARLOVCU}\\[1pt]
+  {\color{ink}\small Karlovac University of Applied Sciences}%
+}
+
+% ---- code listings ----------------------------------------------------------
+\lstdefinestyle{term}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small\color{ink},
+  breaklines=true,
+  breakatwhitespace=false,
+  postbreak=\mbox{\textcolor{comment}{$\hookrightarrow$}\space},
+  frame=leftline,
+  framerule=1.6pt,
+  rulecolor=\color{vukagold},
+  framesep=8pt,
+  xleftmargin=10pt,
+  xrightmargin=4pt,
+  commentstyle=\color{comment}\itshape,
+  morecomment=[l]{\#},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  upquote=true,
+}
+\lstset{style=term}
+
+% ---- callouts (secondary palette) -------------------------------------------
+\newtcolorbox{note}[1][Note]{enhanced,breakable,colback=vukaslate!7,colframe=vukaslate,
+  colbacktitle=vukaslate,coltitle=white,
+  boxrule=0.8pt,left=8pt,right=8pt,top=6pt,bottom=6pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1}}
+\newtcolorbox{warn}[1][Warning]{enhanced,breakable,colback=vukared!6,colframe=vukared,
+  colbacktitle=vukared,coltitle=white,
+  boxrule=0.9pt,left=8pt,right=8pt,top=6pt,bottom=6pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1}}
+\newtcolorbox{tip}[1][Tip]{enhanced,breakable,colback=vukagreen!6,colframe=vukagreen,
+  colbacktitle=vukagreen,coltitle=white,
+  boxrule=0.9pt,left=8pt,right=8pt,top=6pt,bottom=6pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1}}
+
+% ---- section styling: gold number, purple title -----------------------------
+\titleformat{\section}{\Large\bfseries\color{vukapurple}}{\color{vukagold}\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{\color{vukagold}\thesubsection}{0.5em}{}
+\setlist{itemsep=2pt,topsep=3pt}
+
+\pagestyle{fancy}\fancyhf{}
+\renewcommand{\headrule}{\vskip-2pt{\color{vukapurple}\hrule height 0.6pt}}
+\fancyhead[L]{\small\textcolor{vukapurple}{\textbf{VELEU\v CILI\v STE U KARLOVCU}}}
+\fancyhead[R]{\small\textcolor{vukaslate}{\leftmark}}
+\fancyfoot[C]{\small\thepage}
+\fancyfoot[R]{\scriptsize\textcolor{comment}{DE1-SoC}}
+
+% ---- full-bleed purple title page helper ------------------------------------
+% \vukatitlepage{BIG TITLE}{subtitle line}{created-at line}
+\newcommand{\vukatitlepage}[3]{%
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[vukapurple] (current page.south west) rectangle (current page.north east);
+  \fill[vukagold]   ([yshift=6.2cm]current page.west) rectangle
+                    ([yshift=6.0cm]current page.east);
+\end{tikzpicture}%
+\vspace*{1.4cm}
+\noindent\vukawordmarklight
+\vfill
+{\noindent\bfseries\color{vukagold}\fontsize{34}{38}\selectfont #1\par}
+\vspace{0.5cm}
+{\noindent\color{white}\Large #2\par}
+\vfill
+{\noindent\color{white}\small #3\par}
+\vspace{0.2cm}
+{\noindent\color{white}\small \ManualAuthor{} \,\textbullet\, \ManualInstHR\par}
+{\noindent\color{white!75}\footnotesize \today\par}
+\end{titlepage}}
+
+% inline helpers.  \code lets long path tokens break at "/" and "-" so they
+% cannot run past the right margin (harmless in normal text and in headings).
+\newcommand{\bs}{\discretionary{}{}{}}   % zero-width breakpoint
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\arr}{$\rightarrow$}
