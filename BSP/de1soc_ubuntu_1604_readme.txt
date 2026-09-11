@@ -1,7 +1,15 @@
 NOTE (this repo): the stock vendor image itself is NOT included here (it is large
-and gitignored). Download it from Terasic's DE1-SoC resources / System CD. The
-text below is Terasic's original setup note for that image, kept for reference.
-For the modern Debian 12 / Linux 6.12 image built by this repo, see ../README.md.
+and gitignored). Download it from Terasic's DE1-SoC "Resources" tab:
+
+    https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=165&No=836&PartNo=4
+
+On that page, under "Linux BSP (Board Support Package)" (or the DE1-SoC System
+CD), get the "Linux LXDE Desktop" microSD card image (the Linux-4.5 Ubuntu/LXDE
+image this note describes). Terasic's per-file links and page layout change over
+time; if the link above moves, start from the DE1-SoC product page and open its
+Resources / CD-ROM section. The text below is Terasic's original setup note for
+that image, kept for reference. For the modern Debian 12 / Linux 6.12 image built
+by this repo, see ../README.md.
 ----------------------------------------------------------------------------------
 
 Prerequisite: you need at least a 8Gb microSD card
