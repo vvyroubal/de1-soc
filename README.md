@@ -127,7 +127,7 @@ dir) are **generated, not tracked**, and won't be present until you build.
 | Path | What it is |
 |---|---|
 | **[`hps/newimage/`](hps/newimage/)** | The Debian 12 + Linux 6.12 SD-image build — `Makefile`, scripts, kernel config + DE1-SoC device tree, committed bitstream + vendor bootloader, license bundle. **Start here.** |
-| **[`fpga/`](fpga/)** | FPGA designs: [`hps_ghrd/`](fpga/hps_ghrd/) (the HPS reference design → `soc_system.rbf`), [`countdown/`](fpga/countdown/) (standalone 7-seg demo), `minimal/`, the top-level `de1soc_blinker` (`rtl/` + `constraints/` + `build.tcl`/`program.sh`). |
+| **[`fpga/`](fpga/)** | FPGA designs: [`hps_ghrd/`](fpga/hps_ghrd/) (the HPS reference design → `soc_system.rbf`), [`countdown/`](fpga/countdown/) (standalone 7-seg demo), [`fpga-load/`](fpga/fpga-load/) (runtime bitstream loader for any design), `minimal/`, the top-level `de1soc_blinker` (`rtl/` + `constraints/` + `build.tcl`/`program.sh`). |
 | **[`manual/`](manual/)** | Bilingual (EN/HR) illustrated LaTeX setup manual, with committed PDFs. |
 | `BSP/` | Notes for the vendor stock Ubuntu 16.04 image (the image itself is not in the repo — download it from Terasic). |
 
@@ -150,7 +150,7 @@ FAT (boot) · `p2` type-A2 (vendor preloader) · `p3` ext4 rootfs (last, grows).
 - **Load a bitstream at runtime from Linux** (no reboot): `sudo fpga-load.sh <uncompressed.rbf>`.
   The image ships `/usr/local/sbin/fpga-load.sh` and autoloads the `dtbocfg`
   overlay module, so the FPGA Manager reprograms the fabric from userspace via a
-  device-tree overlay on `/soc/base_fpga_region`. See [`fpga/countdown/`](fpga/countdown/).
+  device-tree overlay on `/soc/base_fpga_region`. See [`fpga/fpga-load/`](fpga/fpga-load/).
 
 ## Licensing
 Open-source notices and the corresponding-source bundle are in

@@ -60,5 +60,5 @@ The result should be ~7 MB (uncompressed). A compressed `.rbf` (~2 MB) will
 ## Notes
 - MSEL must be **00000** on the board (HPS/U-Boot configures the FPGA via FPP).
 - To load a bitstream at runtime from Linux instead of at boot, see the
-  overlay/configfs approach in `../countdown/` (`fpga-load.sh`,
-  `*_overlay.dts`).
+  overlay/configfs approach in `../fpga-load/` (`fpga-load.sh`,
+  `fpga_generic_overlay.dts`).

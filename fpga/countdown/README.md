@@ -18,7 +18,11 @@ HEX5  HEX4  HEX3   HEX2  HEX1  HEX0
 | `countdown_top.vhd` | The design (counter + BCD + 7-seg decoder). |
 | `countdown.qsf` | Quartus device (`5CSEMA5F31C6`) + pin assignments. |
 | `countdown.qpf` | Quartus project file. |
-| `fpga-load.sh`, `*_overlay.dts`, `fpga-overlay.service` | Load the design at **runtime from HPS Linux** (configfs overlay via `dtbocfg`) — see below. |
+| `countdown_overlay.dts` | Countdown-specific overlay source (reference — see below). |
+
+The generic runtime loader (`fpga-load.sh`, `fpga_generic_overlay.dts`,
+`fpga-overlay.service`) lives in [`../fpga-load/`](../fpga-load/) — it works
+for **any** self-contained design, this one included.
 
 ## Build
 
@@ -69,17 +73,12 @@ cat /sys/class/fpga_manager/fpga0/state             # -> operating
 sudo /usr/local/sbin/fpga-load.sh -u                # remove overlay (release the region)
 ```
 
-Files here:
-- `fpga-load.sh` — the loader (installed on the image). It stages **whatever
-  `.rbf` you pass** to `/lib/firmware/fpga.rbf` and applies an embedded *generic*
-  overlay that names `fpga.rbf` — so the filename you pass is just the source;
-  the in-fabric firmware name is always `fpga.rbf`.
-- `fpga_generic_overlay.dts` / `countdown_overlay.dts` — overlay sources (target
-  `/soc/base_fpga_region`) for reference / customizing. Note
-  `countdown_overlay.dts` names `countdown.rbf`; it is **not** what `fpga-load.sh`
-  applies — use it only if you apply an overlay manually (then place the bitstream
-  at `/lib/firmware/countdown.rbf`).
-- `fpga-overlay.service` — optional systemd unit to apply a design at boot.
+The loader itself lives in [`../fpga-load/`](../fpga-load/) (see its README).
+The one countdown-specific file here:
+- `countdown_overlay.dts` — overlay source (target `/soc/base_fpga_region`)
+  naming `countdown.rbf`; it is **not** what `fpga-load.sh` applies — use it
+  only if you apply an overlay manually (then place the bitstream at
+  `/lib/firmware/countdown.rbf`).
 
 (Alternatively, put the `.rbf` on the FAT boot partition and load it from
 `u-boot.scr` at boot — that's how the GHRD `soc_system.rbf` is loaded.)

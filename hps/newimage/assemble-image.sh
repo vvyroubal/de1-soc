@@ -56,7 +56,7 @@ mount ${LOOP}p3 "$m"
 cp -a "$R/." "$m/"
 rm -f "$m/usr/bin/qemu-arm-static"
 install -m 0755 "$BASE/expand-rootfs.sh" "$m/usr/local/sbin/expand-rootfs.sh"
-install -m 0755 "$BASE/../../fpga/countdown/fpga-load.sh" "$m/usr/local/sbin/fpga-load.sh"
+install -m 0755 "$BASE/../../fpga/fpga-load/fpga-load.sh" "$m/usr/local/sbin/fpga-load.sh"
 # Open-source license notices + corresponding-source bundle (GPL compliance)
 mkdir -p "$m/usr/share/doc/de1soc-open-source-licenses"
 cp -a "$BASE/legal/." "$m/usr/share/doc/de1soc-open-source-licenses/"
