@@ -103,5 +103,13 @@
 	bridge-enable = <1>;
 };
 
-/* Note: fpgamgr0 and base_fpga_region are enabled by default in socfpga.dtsi,
- * so the GHRD fabric is reconfigurable at runtime via configfs DT overlays. */
+/* fpgamgr0 and base_fpga_region are enabled by default in socfpga.dtsi, so the
+ * fabric is reconfigurable at runtime via configfs DT overlays (fpga-load.sh).
+ * Give the region the bridges to manage: when it reprograms the fabric it then
+ * disables the HPS-to-FPGA bridges first and re-enables them afterwards. Without
+ * this, a runtime reconfiguration swaps the fabric out from under live bridges
+ * and the next HPS access to a fabric slave hangs the SoC. (base_fpga_region has
+ * no label in socfpga.dtsi, so reference it by path.) */
+&{/soc/base_fpga_region} {
+	fpga-bridges = <&fpga_bridge0 &fpga_bridge1>;
+};

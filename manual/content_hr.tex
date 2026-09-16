@@ -297,6 +297,13 @@ sudo /usr/local/sbin/fpga-load.sh my_design.rbf
 cat /sys/class/fpga_manager/fpga0/state    # -> operating
 \end{lstlisting}
 \code{.rbf} mora biti nekomprimiran u svakom slučaju. Vidi \code{fpga/fpga-load/}.
+
+Rekonfiguracija tijekom rada radi za \emph{samostalne} dizajne. Dizajn koji
+izlaže memorijski mapirane podređene jedinice HPS-u preko FPGA mostova mora se
+umjesto toga učitati \emph{pri pokretanju} (stavite njegov \code{.rbf} na FAT
+particiju kao \code{soc\_system.rbf}): rekonfiguracija tijekom rada zamijeni
+fabric ispod već inicijaliziranih mostova, pa se HPS zablokira pri prvom
+pristupu podređenoj jedinici u fabricu.
 \end{note}
 Ova slika je bez grafičkog sučelja (nema VGA framebuffera --- mainline jezgra nema
 \code{altvipfb} upravljački program), pa nema aktivnog prikaza koji bi se poremetio

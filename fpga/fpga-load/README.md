@@ -2,8 +2,21 @@
 
 Design-agnostic tooling to reprogram the DE1-SoC fabric from the running
 Debian image (MSEL = 00000), **no JTAG, no reboot**. Works for any
-self-contained design's uncompressed `.rbf` — the countdown demo, the GHRD,
-or your own.
+**self-contained** design's uncompressed `.rbf` — the countdown demo or your
+own logic that has no HPS-facing interfaces.
+
+> **Scope — self-contained designs only.** Runtime reconfiguration works for
+> designs that do **not** talk to the HPS through the FPGA bridges. If your
+> design exposes memory-mapped slaves to the HPS (peripherals on the
+> lightweight or full HPS-to-FPGA bridge, e.g. addresses `0xFF20_0000` /
+> `0xC0000000`), load it **at boot** instead — put its `.rbf` on the FAT boot
+> partition as `soc_system.rbf` so U-Boot configures it before Linux. A
+> runtime `fpga-manager` reconfiguration swaps the fabric out from under the
+> already-initialised bridges, and the fabric-side of the bridge does not
+> re-synchronise (verified on hardware: the HPS then hangs on the first access
+> to a fabric slave, and no HPS-side bridge-reset toggle recovers it). This is
+> a limitation of the runtime reconfiguration path on this SoC, not of a
+> particular design.
 
 | File | Purpose |
 |------|---------|

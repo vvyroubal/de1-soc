@@ -300,6 +300,13 @@ sudo /usr/local/sbin/fpga-load.sh my_design.rbf
 cat /sys/class/fpga_manager/fpga0/state    # -> operating
 \end{lstlisting}
 The \code{.rbf} must be uncompressed either way. See \code{fpga/fpga-load/}.
+
+Runtime reconfiguration works for \emph{self-contained} designs. A design that
+exposes memory-mapped slaves to the HPS through the FPGA bridges must instead be
+loaded \emph{at boot} (place its \code{.rbf} on the FAT partition as
+\code{soc\_system.rbf}): a runtime reconfiguration swaps the fabric out from
+under the already-initialised bridges and the HPS then hangs on the first access
+to a fabric slave.
 \end{note}
 This image is headless (no VGA frame buffer --- the mainline kernel has no
 \code{altvipfb} driver), so there is no running display to disturb when you change

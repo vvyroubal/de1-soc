@@ -72,6 +72,12 @@ kernel: fetch
 	# (DTS/config copied in), which would otherwise stamp "-dirty": disable
 	# LOCALVERSION_AUTO (it's `default y`, so the defconfig alone doesn't) AND pass
 	# LOCALVERSION= (set-but-empty) so setlocalversion appends no scm/dirty suffix.
+	# An empty .scmversion makes setlocalversion skip git detection entirely, so
+	# the SAME clean "6.12.0" stamps into the kernel AND every out-of-tree module
+	# (e.g. dtbocfg). Without it the module gets "6.12.0-dirty" vermagic and won't
+	# load against the clean kernel (modprobe version-magic mismatch), which
+	# silently breaks fpga-load.sh runtime reconfiguration.
+	: > $(KDIR)/.scmversion
 	$(KDIR)/scripts/config --file $(KDIR)/.config --disable LOCALVERSION_AUTO
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) olddefconfig
 	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) LOCALVERSION= -j$(JOBS) zImage modules dtbs
