@@ -209,8 +209,9 @@ The image is Debian 12 (glibc 2.36). Build with a toolchain of the same era or
 older; a much newer cross-toolchain can link against glibc symbols the board lacks
 (\code{version 'GLIBC\_2.xx' not found} at runtime). For small tools link
 statically (\code{-static}); for larger apps build against a sysroot copied from
-the board (\code{-{}-sysroot}). On the board itself you can also just
-\code{apt install build-essential} and compile natively.
+the board (\code{-{}-sysroot}). The image ships \code{gcc} and \code{make}
+preinstalled, so you can also compile small programs natively on the board
+(add \code{apt install build-essential} for the full toolset).
 \end{note}
 To build a kernel module, use the kernel source tree this repo builds (matching
 \code{6.12.0}):

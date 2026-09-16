@@ -206,8 +206,9 @@ Slika je Debian 12 (glibc 2.36). Gradite lancem alata iste ili starije generacij
 puno noviji lanac alata može se povezati sa simbolima glibc-a kojih na pločici nema
 (\code{version 'GLIBC\_2.xx' not found} pri pokretanju). Za male alate povezujte
 statički (\code{-static}); za veće aplikacije gradite prema sysrootu kopiranom s
-pločice (\code{-{}-sysroot}). Na samoj pločici možete i jednostavno
-\code{apt install build-essential} te prevoditi izvorno.
+pločice (\code{-{}-sysroot}). Slika dolazi s predinstaliranim \code{gcc} i
+\code{make}, pa male programe možete prevoditi izravno na pločici (za puni
+komplet alata dodajte \code{apt install build-essential}).
 \end{note}
 Za izgradnju kernel modula koristite stablo izvornog koda jezgre koje gradi ovaj repozitorij
 (odgovara \code{6.12.0}):
