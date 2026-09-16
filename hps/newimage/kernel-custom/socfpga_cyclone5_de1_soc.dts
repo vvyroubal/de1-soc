@@ -84,5 +84,24 @@
 	status = "okay";
 };
 
+/* HPS-to-FPGA bridges. Enabling them lets HPS software reach memory-mapped
+ * slaves in the FPGA fabric (e.g. the camstream peripherals on the LW and
+ * full H2F windows at 0xFF200000 / 0xC0000000). `bridge-enable = <1>` makes
+ * the altera-fpga-bridge driver bring each bridge out of reset AND set the
+ * L3 remap (via the l3regs syscon) at probe — the correct, in-kernel way to
+ * route the windows. Doing this from userspace /dev/mem hangs the SoC (the
+ * write-only L3 remap register is not safely writable that way), and enabling
+ * in U-Boot does not survive kernel init, so it must be done here.
+ * fpga_bridge0 = lwhps2fpga, fpga_bridge1 = hps2fpga. */
+&fpga_bridge0 {
+	status = "okay";
+	bridge-enable = <1>;
+};
+
+&fpga_bridge1 {
+	status = "okay";
+	bridge-enable = <1>;
+};
+
 /* Note: fpgamgr0 and base_fpga_region are enabled by default in socfpga.dtsi,
  * so the GHRD fabric is reconfigurable at runtime via configfs DT overlays. */
