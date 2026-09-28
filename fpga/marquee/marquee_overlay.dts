@@ -1,0 +1,21 @@
+/dts-v1/;
+/plugin/;
+
+/*
+ * Marquee-specific FPGA-reconfiguration overlay (mainline kernel). Applying it
+ * makes the base FPGA region program /lib/firmware/marquee.rbf via the FPGA
+ * Manager. The design is self-contained (no HPS-facing peripherals), so no
+ * child device nodes are needed.
+ *
+ * Target is the mainline node name /soc/base_fpga_region (underscores).
+ * Applied from userspace via the dtbocfg module (configfs).
+ */
+
+/ {
+    fragment@0 {
+        target-path = "/soc/base_fpga_region";
+        __overlay__ {
+            firmware-name = "marquee.rbf";
+        };
+    };
+};
