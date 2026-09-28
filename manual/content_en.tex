@@ -162,6 +162,15 @@ First run, to grow the root filesystem to fill the card:
 sudo /usr/local/sbin/expand-rootfs.sh && sudo reboot
 \end{lstlisting}
 
+\begin{note}[Built in and ready to use]
+The image ships a few conveniences out of the box: a \textbf{native C toolchain}
+(\code{gcc}, \code{make}) so small programs compile on the board (see
+\emph{Cross-compile for the board}); \textbf{USB camera support} --- plug a
+UVC webcam or a Sony PlayStation Eye (\code{gspca}/\code{ov534}) into the USB-OTG
+port and it appears as \code{/dev/video0} for V4L2 capture; and \textbf{runtime
+FPGA reconfiguration} from Linux (see \emph{Changing the FPGA fabric}).
+\end{note}
+
 \section{Networking and SSH}
 \code{eth0} is configured for DHCP and an SSH server starts at boot. Once Ethernet
 has an address you can drop the serial cable.

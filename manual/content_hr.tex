@@ -159,6 +159,16 @@ Pri prvom pokretanju, da korijenski datotečni sustav proširite na cijelu karti
 sudo /usr/local/sbin/expand-rootfs.sh && sudo reboot
 \end{lstlisting}
 
+\begin{note}[Ugrađeno i spremno za uporabu]
+Slika donosi nekoliko pogodnosti odmah: \textbf{izvorni C lanac alata}
+(\code{gcc}, \code{make}) pa se mali programi prevode na samoj pločici (vidi
+\emph{Cross-compile za pločicu}); \textbf{podršku za USB kameru} ---
+priključite UVC web-kameru ili Sony PlayStation Eye (\code{gspca}/\code{ov534})
+u USB-OTG priključak i pojavljuje se kao \code{/dev/video0} za V4L2 snimanje; te
+\textbf{rekonfiguraciju FPGA-a tijekom rada} iz Linuxa (vidi \emph{Promjena FPGA
+programabilne logike}).
+\end{note}
+
 \section{Mreža i SSH}
 \code{eth0} je postavljen na DHCP, a SSH poslužitelj se pokreće pri podizanju. Kad
 Ethernet dobije adresu, možete odspojiti serijski kabel.
