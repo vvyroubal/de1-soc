@@ -49,10 +49,23 @@ apply_staged() {
     [ -f "$RBF_DEST" ] || die "no staged bitstream at $RBF_DEST — run '$0 <design.rbf>' first"
     remove_overlay
     mkdir "$OVL_DIR"
-    # Applying = writing the compiled overlay blob to the dtbocfg 'dtbo' attribute.
+    # Two steps with dtbocfg: (1) load the compiled overlay blob into the 'dtbo'
+    # attribute — this only STORES it; (2) write 1 to 'status' to actually APPLY
+    # it (dtbocfg_overlay_item_status_store -> of_overlay_fdt_apply), which is
+    # what fires the fpga-region notifier and reprograms the fabric. Writing dtbo
+    # alone is a silent no-op: the blob is stored, status stays 0, nothing
+    # reprograms, and the FPGA manager keeps reporting the previous ('operating')
+    # state — which is exactly the trap that made this look like it worked.
     if ! base64 -d <<<"$DTBO_B64" > "$OVL_DIR/dtbo" 2>/dev/null; then
-        remove_overlay; die "overlay apply failed — check: dmesg | tail"
+        remove_overlay; die "overlay load failed — check: dmesg | tail"
     fi
+    if ! echo 1 > "$OVL_DIR/status" 2>/dev/null; then
+        remove_overlay; die "overlay apply (status=1) failed — check: dmesg | tail"
+    fi
+    # Confirm dtbocfg actually applied it (status reads back 1); a 0 here means
+    # the reconfiguration silently did not happen.
+    [ "$(cat "$OVL_DIR/status" 2>/dev/null)" = "1" ] \
+        || { remove_overlay; die "overlay did not apply (status!=1). Check: dmesg | tail"; }
     sleep 1
     local st; st=$(cat "$FPGA_STATE" 2>/dev/null || echo unknown)
     echo "FPGA manager state : $st"

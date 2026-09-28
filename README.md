@@ -151,10 +151,10 @@ FAT (boot) · `p2` type-A2 (vendor preloader) · `p3` ext4 rootfs (last, grows).
   The image ships `/usr/local/sbin/fpga-load.sh` and autoloads the `dtbocfg`
   overlay module, so the FPGA Manager reprograms the fabric from userspace via a
   device-tree overlay on `/soc/base_fpga_region`. See [`fpga/fpga-load/`](fpga/fpga-load/).
-  **Runtime loading is for self-contained designs only** — a design with
-  HPS-facing slaves on the FPGA bridges must instead be loaded at boot (place
-  its `.rbf` on the FAT partition as `soc_system.rbf`); see the note in
-  [`fpga/fpga-load/`](fpga/fpga-load/).
+  Works for **any** design, including ones with HPS-facing slaves on the FPGA
+  bridges — the region cycles the bridges around the reprogram, so no reboot or
+  boot-time `soc_system.rbf` swap is needed (verified on hardware for both the
+  countdown demo and the bridge-using camstream peripherals).
 
 ## Licensing
 Open-source notices and the corresponding-source bundle are in

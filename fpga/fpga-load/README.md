@@ -2,21 +2,24 @@
 
 Design-agnostic tooling to reprogram the DE1-SoC fabric from the running
 Debian image (MSEL = 00000), **no JTAG, no reboot**. Works for any
-**self-contained** design's uncompressed `.rbf` — the countdown demo or your
-own logic that has no HPS-facing interfaces.
+uncompressed `.rbf` — the countdown demo, the GHRD, or your own — **including
+designs with HPS-facing slaves on the FPGA bridges**. The `base_fpga_region`
+lists the HPS-to-FPGA bridges (`fpga-bridges = <&fpga_bridge0 &fpga_bridge1>`),
+so the FPGA-region framework automatically disables the bridges before
+reprogramming and re-enables them afterwards — the fabric-side of each bridge
+re-synchronises to the new design with no HPS hang. *(Verified on hardware:
+both a self-contained design (countdown) and a bridge-using design (the
+camstream peripherals at `0xFF20_0000` / `0xC0000000`) load at runtime and
+work — camstream's registers read back and its selftest passes after a
+runtime load.)*
 
-> **Scope — self-contained designs only.** Runtime reconfiguration works for
-> designs that do **not** talk to the HPS through the FPGA bridges. If your
-> design exposes memory-mapped slaves to the HPS (peripherals on the
-> lightweight or full HPS-to-FPGA bridge, e.g. addresses `0xFF20_0000` /
-> `0xC0000000`), load it **at boot** instead — put its `.rbf` on the FAT boot
-> partition as `soc_system.rbf` so U-Boot configures it before Linux. A
-> runtime `fpga-manager` reconfiguration swaps the fabric out from under the
-> already-initialised bridges, and the fabric-side of the bridge does not
-> re-synchronise (verified on hardware: the HPS then hangs on the first access
-> to a fabric slave, and no HPS-side bridge-reset toggle recovers it). This is
-> a limitation of the runtime reconfiguration path on this SoC, not of a
-> particular design.
+> **Requires the full runtime-reconfig stack** (all shipped in this image): the
+> `dtbocfg` module must load (its vermagic must match the kernel), the kernel
+> must have `CONFIG_OF_FPGA_REGION=y` so `base_fpga_region` is a real
+> fpga-region, and `fpga-load.sh` must set the overlay's `status` attribute to
+> `1` to actually apply it (writing the `dtbo` blob alone only *stores* it).
+> All three are in place here; older images missing any one silently fail to
+> reprogram (the FPGA manager keeps reporting the previous `operating` state).
 
 | File | Purpose |
 |------|---------|
@@ -38,9 +41,12 @@ sudo /usr/local/sbin/fpga-load.sh -s           # status
 
 How it works: mainline has no built-in userspace overlay interface, so the
 image autoloads the **`dtbocfg`** module (providing
-`/sys/kernel/config/device-tree/overlays`); applying an overlay that targets
-`/soc/base_fpga_region` makes the FPGA Manager program the bitstream.
-*(Verified on hardware: `state` → `operating`.)*
+`/sys/kernel/config/device-tree/overlays`). `fpga-load.sh` writes the overlay
+blob to the overlay's `dtbo` attribute **and then writes `1` to its `status`
+attribute** — that second write is what makes `dtbocfg` call
+`of_overlay_fdt_apply`, which fires the fpga-region notifier and makes the FPGA
+Manager program the bitstream (dmesg shows `fpga_manager fpga0: writing …` and
+the `fpga_bridge` disable/enable around it).
 
 A design-specific overlay example (naming its own `.rbf` instead of the
 generic staged one) is `../countdown/countdown_overlay.dts`.
