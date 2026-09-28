@@ -3,8 +3,8 @@
 \addcontentsline{toc}{section}{Pregled}
 Vodič od nule za pokretanje modernog Linuxa na hard procesorskom sustavu (HPS)
 pločice DE1-SoC i dobivanje ljuske preko serijske veze i SSH-a --- temelj za
-ugradbeni i FPGA razvoj na pločici. Na kraju ćete imati \textbf{Debian 12
-(bookworm)} na \textbf{mainline Linuxu 6.12}, serijsku konzolu na
+ugradbeni i FPGA razvoj na pločici. Na kraju ćete imati \textbf{Debian 13
+(trixie)} na \textbf{mainline Linuxu 6.12}, serijsku konzolu na
 \code{115200 8N1} i SSH pristup, uz FPGA programabilnu logiku konfiguriranu pri podizanju.
 Slika je bez grafičkog sučelja (headless); radite preko serijske konzole i SSH-a.
 
@@ -27,7 +27,7 @@ Silicon Labs CP210x VCP upravljački program ako vaš OS ne prepozna konzolni
 priključak automatski.
 
 \section{Nabavite sliku}
-Ovaj repozitorij gradi sliku iz izvornog koda --- Debian 12 + Linux 6.12 s hibridnim lancem
+Ovaj repozitorij gradi sliku iz izvornog koda --- Debian 13 + Linux 6.12 s hibridnim lancem
 podizanja (provjereni tvornički preloader/U-Boot uz mainline jezgru i Debian
 korisnički prostor). \textbf{Quartus vam ne treba:} prevedeni FPGA bitstream
 (\code{soc\_system.rbf}) nalazi se u repozitoriju.
@@ -39,14 +39,14 @@ git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
 cd DE1-SoC/hps/newimage
 make deps      # jednokratno: instalira alate za izgradnju (koristi sudo/apt)
 make all       # gradi jezgru + Debian rootfs, sastavlja sliku
-# rezultat: image/de1soc-debian12-6.12.img
+# rezultat: image/de1soc-debian13-6.12.img
 \end{lstlisting}
 Izvorni kod jezgre je plitki (shallow) git submodul vezan na oznaku \code{v6.12}; ako ste
 klonirali bez \code{-{}-recurse-submodules}, \code{make} ga inicijalizira za vas.
 Detalji su u \code{hps/newimage/README.md}.
 
 \subsection{Opcija B --- zapis gotove slike (release)}
-Ako je za projekt objavljena gotova slika (\code{de1soc-debian12-6.12.img.xz}),
+Ako je za projekt objavljena gotova slika (\code{de1soc-debian13-6.12.img.xz}),
 možete preskočiti izgradnju i zapisati je izravno (vidi sljedeći odjeljak).
 
 \begin{tip}[Zadržite referentnu kopiju]
@@ -70,14 +70,14 @@ Uz \code{dd}, svaki put dvaput provjerite naziv uređaja.
 # Linux: pronadite karticu po velicini (npr. /dev/sdX ili /dev/mmcblkN)
 lsblk
 sudo umount /dev/sdX*        # odmontirajte automatski montirane particije
-sudo dd if=de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sudo dd if=de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 \end{lstlisting}
 \begin{lstlisting}
 # macOS: koristite sirovi rdisk cvor i prvo odmontirajte
 diskutil list
 diskutil unmountDisk /dev/diskN
-sudo dd if=de1soc-debian12-6.12.img of=/dev/rdiskN bs=4m
+sudo dd if=de1soc-debian13-6.12.img of=/dev/rdiskN bs=4m
 sync
 \end{lstlisting}
 \begin{tip}[Provjera ispravnosti]
@@ -139,7 +139,7 @@ Boot ROM \arr\ tvornički preloader (inicijalizacija SDRAM-a) \arr\ tvornički U
 (pokreće \code{u-boot.scr}: učitava FPGA dizajn, zatim jezgru) \arr\ jezgra \arr\
 Debian prijava. Trebali biste vidjeti:
 \begin{lstlisting}
-=== DE1-SoC Debian 12 / Linux 6.12 ===
+=== DE1-SoC Debian 13 / Linux 6.12 ===
 u-boot.scr: loading GHRD soc_system.rbf into the FPGA fabric
 FPGA configured with soc_system.rbf
 ...
@@ -212,7 +212,7 @@ scp hello debian@de1-soc-debian:~
 ssh debian@de1-soc-debian ./hello
 \end{lstlisting}
 \begin{note}[Uskladite s bibliotekama na cilju]
-Slika je Debian 12 (glibc 2.36). Gradite lancem alata iste ili starije generacije;
+Slika je Debian 13 (glibc 2.41). Gradite lancem alata iste ili starije generacije;
 puno noviji lanac alata može se povezati sa simbolima glibc-a kojih na pločici nema
 (\code{version 'GLIBC\_2.xx' not found} pri pokretanju). Za male alate povezujte
 statički (\code{-static}); za veće aplikacije gradite prema sysrootu kopiranom s

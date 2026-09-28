@@ -20,7 +20,7 @@ BASE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"   # = newimage/
 KERN=$BASE/kernel/linux-6.12
 R=$BASE/rootfs
 VA2=$BASE/fpga/vendor-a2-preloader-uboot.bin
-IMG=$BASE/image/de1soc-debian12-6.12.img
+IMG=$BASE/image/de1soc-debian13-6.12.img
 
 FAT_MB=256; A2_MB=2; EXT_MB=1536
 FAT_START=2048;                   FAT_SIZE=$((FAT_MB*2048))   # p1

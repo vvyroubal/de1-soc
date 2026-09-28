@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Vedran Vyroubal, Veleuciliste u Karlovcu (VUKA)
-# Assemble the DE1-SoC Debian 12 / Linux 6.12 SD image.
+# Assemble the DE1-SoC Debian 13 / Linux 6.12 SD image.
 # Layout (partition numbers == disk order; rootfs LAST so it grows trivially):
 #   p1 FAT (boot) @2048 | p2 type-A2 (vendor preloader+U-Boot) | p3 ext4 (rootfs, last)
 # U-Boot: FAT is still `mmc 0:1`; A2 is found by partition TYPE (0xa2), not number;
@@ -12,7 +12,7 @@ BASE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 KERN=$BASE/kernel/linux-6.12
 R=$BASE/rootfs
 VA2=$BASE/fpga/vendor-a2-preloader-uboot.bin      # proven vendor preloader+U-Boot
-IMG=$BASE/image/de1soc-debian12-6.12.img
+IMG=$BASE/image/de1soc-debian13-6.12.img
 
 FAT_MB=256; A2_MB=2; EXT_MB=1536
 

@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Vedran Vyroubal, Veleuciliste u Karlovcu (VUKA)
 # =============================================================================
-#  DE1-SoC Debian 12 + Linux 6.12 SD-card image — reproducible build
+#  DE1-SoC Debian 13 + Linux 6.12 SD-card image — reproducible build
 #
 #  Quick start (fresh clone):
 #     make deps       # one-time: install host build tools (uses sudo/apt)
 #     make all        # fetch kernel, build kernel+rootfs, assemble the image
-#     # then flash image/de1soc-debian12-6.12.img to an SD card.
+#     # then flash image/de1soc-debian13-6.12.img to an SD card.
 #
 #  Targets: deps fetch fetch-tarball kernel dtbocfg rootfs image all clean distclean
 #  rootfs/ and image assembly need root — they run via $(ROOT) (sudo by default;

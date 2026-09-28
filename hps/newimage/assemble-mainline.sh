@@ -22,7 +22,7 @@ U="${U:-$BASE/../sdcard/build/u-boot}"
 [ -f "$U/u-boot-with-spl.sfp" ] || { echo "experimental: build mainline U-Boot and set U= (no u-boot-with-spl.sfp at $U)"; exit 1; }
 KERN=$BASE/kernel/linux-6.12
 R=$BASE/rootfs
-IMG=$BASE/image/de1soc-debian12-6.12-mainline.img
+IMG=$BASE/image/de1soc-debian13-6.12-mainline.img
 
 FAT_MB=256; EXT_MB=1536
 A2_START=512; A2_SIZE=1536                      # 512..2047 (768 KiB; sfp is 672 KiB)

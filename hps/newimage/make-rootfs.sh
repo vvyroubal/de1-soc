@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Vedran Vyroubal, Veleuciliste u Karlovcu (VUKA)
-# Build the Debian 12 (bookworm) armhf rootfs via debootstrap (two-stage +
+# Build the Debian 13 (trixie) armhf rootfs via debootstrap (two-stage +
 # qemu-arm-static), then configure it for the DE1-SoC. Run as root:
 #   pkexec bash make-rootfs.sh     (or: sudo bash make-rootfs.sh)
 #
@@ -12,7 +12,8 @@ set -e
 # Resolve this script's own directory so the tree works from any clone location.
 BASE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 R="$BASE/rootfs"
-SUITE=bookworm
+# trixie = Debian 13 stable; tracks the latest 13.x point release automatically.
+SUITE=trixie
 MIRROR=http://deb.debian.org/debian
 
 # Packages beyond the minimal base set:

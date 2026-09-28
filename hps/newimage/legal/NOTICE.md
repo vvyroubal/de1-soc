@@ -1,4 +1,4 @@
-# Open-Source License Notices — DE1-SoC Debian 12 Image
+# Open-Source License Notices — DE1-SoC Debian 13 Image
 
 This product is based on the Terasic DE1-SoC (Intel Cyclone V SoC, device
 `5CSEMA5F31C6`) and ships a software image composed of the components listed
@@ -18,7 +18,7 @@ alongside the binaries (satisfying GPLv2 §3(a)).
 | **Bootloader** — preloader (SPL) + U-Boot proper | U-Boot **2013.01.01** (built Oct 12 2016 via Altera SoC EDS 16.0, Sourcery CodeBench Lite 2015.11-45 / `arm-altera-eabi-gcc 5.2.0`) | GPLv2 (U-Boot core) + BSD-style (Altera `hwlib`/preloader) | Archived: `legal/source/u-boot-socfpga-ACDS16.0.tar.gz` (Intel `u-boot-socfpga`, tag `ACDS16.0_REL_GSRD_PR`). Board handoff/BSP from Terasic's published DE1-SoC GHRD (see Bootloader section). |
 | **Linux kernel** | mainline **6.12** (`ARCH=arm`, custom `socfpga_defconfig`) + custom DTS `socfpga_cyclone5_de1_soc` | GPLv2 | Pinned Linux 6.12 via git submodule (`torvalds/linux` @ `v6.12`); tarball fallback from kernel.org. Our DTS/config are in `kernel-custom/`. |
 | **dtbocfg** — device-tree overlay-configfs module (enables runtime FPGA reconfig from Linux) | ikwzm/dtbocfg 0.1.1 | BSD-2-Clause (Ichiro Kawazome) | Vendored source at `hps/newimage/dtbocfg/` (incl. its `LICENSE`); shipped in the image as the out-of-tree `dtbocfg.ko`. |
-| **Root filesystem** | Debian 12 (bookworm), armhf | DFSG (GPL / permissive mix, per-package) | Debian publishes all source via `https://deb.debian.org/debian` and `snapshot.debian.org`; per-package source obtainable with `apt-get source <pkg>`. |
+| **Root filesystem** | Debian 13 (trixie), armhf | DFSG (GPL / permissive mix, per-package) | Debian publishes all source via `https://deb.debian.org/debian` and `snapshot.debian.org`; per-package source obtainable with `apt-get source <pkg>`. |
 | **FPGA bitstream** | `soc_system.rbf` — DE1-SoC GHRD (`de1_soc_top_v2.vhd`, a minimal top derived from the community GHRD by S. Kashani-Akhavan) + Altera HPS base IP | Community HDL: **The Unlicense** (public domain) + Intel IP License (compiled bitstream redistributable) | Redistributable as a compiled `.rbf` — see **FPGA bitstream** note below; upstream license at `fpga/hps_ghrd/LICENSE.upstream`. |
 | **Project scripts, custom DTS, device tree, countdown FPGA design** | — | © VUKA, **GPL-2.0-or-later** (see top-level `LICENSE`) | This repository. |
 

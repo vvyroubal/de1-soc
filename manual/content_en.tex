@@ -4,7 +4,7 @@
 A from-scratch guide to running modern Linux on the DE1-SoC's hard processor
 system (HPS) and reaching a shell over serial and SSH --- the foundation for
 embedded and FPGA development on the board. You will end up with \textbf{Debian
-12 (bookworm)} on \textbf{mainline Linux 6.12}, a serial console at
+12 (trixie)} on \textbf{mainline Linux 6.12}, a serial console at
 \code{115200 8N1}, and SSH access, with the FPGA fabric configured at boot. The
 image is headless (no graphical desktop); you work over the serial console and
 SSH.
@@ -29,7 +29,7 @@ the Silicon Labs CP210x VCP driver if your OS does not detect the console port
 automatically.
 
 \section{Get the image}
-This repository builds the image from source --- Debian 12 + Linux 6.12 with a
+This repository builds the image from source --- Debian 13 + Linux 6.12 with a
 vendor-hybrid boot chain (the proven vendor preloader/U-Boot plus a mainline
 kernel and Debian userspace). \textbf{You do not need Quartus:} the compiled FPGA
 bitstream (\code{soc\_system.rbf}) is committed.
@@ -41,14 +41,14 @@ git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
 cd DE1-SoC/hps/newimage
 make deps      # one-time: install the host build tools (uses sudo/apt)
 make all       # build kernel + Debian rootfs, assemble the image
-# result: image/de1soc-debian12-6.12.img
+# result: image/de1soc-debian13-6.12.img
 \end{lstlisting}
 The Linux kernel source is a shallow git submodule pinned to \code{v6.12}; if you
 cloned without \code{-{}-recurse-submodules}, \code{make} initialises it for you.
 See \code{hps/newimage/README.md} for details.
 
 \subsection{Option B --- flash a prebuilt release}
-If a release image (\code{de1soc-debian12-6.12.img.xz}) is published for the
+If a release image (\code{de1soc-debian13-6.12.img.xz}) is published for the
 project, you can skip the build and flash it directly (see the next section).
 
 \begin{tip}[Keep a reference copy]
@@ -73,14 +73,14 @@ microSD card, confirm the size) \arr\ \emph{Flash}. Etcher verifies automaticall
 # Linux: find the card by size (e.g. /dev/sdX or /dev/mmcblkN)
 lsblk
 sudo umount /dev/sdX*        # unmount any auto-mounted partitions
-sudo dd if=de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sudo dd if=de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 \end{lstlisting}
 \begin{lstlisting}
 # macOS: note the raw rdisk node, and unmount first
 diskutil list
 diskutil unmountDisk /dev/diskN
-sudo dd if=de1soc-debian12-6.12.img of=/dev/rdiskN bs=4m
+sudo dd if=de1soc-debian13-6.12.img of=/dev/rdiskN bs=4m
 sync
 \end{lstlisting}
 \begin{tip}[Sanity check]
@@ -141,7 +141,7 @@ through: Boot ROM \arr\ vendor preloader (SDRAM init) \arr\ vendor U-Boot (runs
 \code{u-boot.scr}: loads the FPGA design, then the kernel) \arr\ kernel \arr\
 Debian login. You should see:
 \begin{lstlisting}
-=== DE1-SoC Debian 12 / Linux 6.12 ===
+=== DE1-SoC Debian 13 / Linux 6.12 ===
 u-boot.scr: loading GHRD soc_system.rbf into the FPGA fabric
 FPGA configured with soc_system.rbf
 ...
@@ -214,7 +214,7 @@ scp hello debian@de1-soc-debian:~
 ssh debian@de1-soc-debian ./hello
 \end{lstlisting}
 \begin{note}[Match the target's libraries]
-The image is Debian 12 (glibc 2.36). Build with a toolchain of the same era or
+The image is Debian 13 (glibc 2.41). Build with a toolchain of the same era or
 older; a much newer cross-toolchain can link against glibc symbols the board lacks
 (\code{version 'GLIBC\_2.xx' not found} at runtime). For small tools link
 statically (\code{-static}); for larger apps build against a sysroot copied from

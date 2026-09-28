@@ -1,7 +1,7 @@
 # DE1-SoC — HPS Linux + FPGA
 
 Working tree for the **Terasic DE1-SoC** board (Intel Cyclone V SoC, dual-core
-ARM Cortex-A9 HPS + FPGA fabric, device `5CSEMA5F31C6`): a modern **Debian 12 /
+ARM Cortex-A9 HPS + FPGA fabric, device `5CSEMA5F31C6`): a modern **Debian 13 /
 Linux 6.12** SD-card image, FPGA designs, a bilingual setup manual, and the
 build system that produces it all from source.
 
@@ -50,7 +50,7 @@ make all       # build kernel + Debian rootfs, assemble the image
 (Cloned without `--recurse-submodules`? No problem — `make` initializes the
 kernel submodule for you, or run `git submodule update --init --depth 1`.)
 
-This produces **`hps/newimage/image/de1soc-debian12-6.12.img`** (uncompressed).
+This produces **`hps/newimage/image/de1soc-debian13-6.12.img`** (uncompressed).
 Details, internals, and an (optional) prebuilt-release path:
 **[`hps/newimage/README.md`](hps/newimage/README.md)**.
 
@@ -66,7 +66,7 @@ lsblk        # identify the card, e.g. /dev/sdX  (NOT a partition like sdX1)
 Then write the image (replace `/dev/sdX` with your card):
 
 ```bash
-sudo dd if=hps/newimage/image/de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sudo dd if=hps/newimage/image/de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 ```
 
@@ -126,7 +126,7 @@ dir) are **generated, not tracked**, and won't be present until you build.
 
 | Path | What it is |
 |---|---|
-| **[`hps/newimage/`](hps/newimage/)** | The Debian 12 + Linux 6.12 SD-image build — `Makefile`, scripts, kernel config + DE1-SoC device tree, committed bitstream + vendor bootloader, license bundle. **Start here.** |
+| **[`hps/newimage/`](hps/newimage/)** | The Debian 13 + Linux 6.12 SD-image build — `Makefile`, scripts, kernel config + DE1-SoC device tree, committed bitstream + vendor bootloader, license bundle. **Start here.** |
 | **[`fpga/`](fpga/)** | FPGA designs: [`hps_ghrd/`](fpga/hps_ghrd/) (the HPS reference design → `soc_system.rbf`), [`countdown/`](fpga/countdown/) (standalone 7-seg demo), [`fpga-load/`](fpga/fpga-load/) (runtime bitstream loader for any design), `minimal/`, the top-level `de1soc_blinker` (`rtl/` + `constraints/` + `build.tcl`/`program.sh`). |
 | **[`manual/`](manual/)** | Bilingual (EN/HR) illustrated LaTeX setup manual, with committed PDFs. |
 | `BSP/` | Notes for the vendor stock Ubuntu 16.04 image (the image itself is not in the repo — download it from Terasic). |
@@ -135,7 +135,7 @@ dir) are **generated, not tracked**, and won't be present until you build.
 
 BootROM → **vendor U-Boot 2013.01.01** (in the type-A2 partition) → `u-boot.scr`
 (loads the FPGA GHRD `soc_system.rbf`, sets root to `/dev/mmcblk0p3`) → **mainline
-Linux 6.12** → **Debian 12**. The mainline U-Boot SPL cannot reliably read the SD
+Linux 6.12** → **Debian 13**. The mainline U-Boot SPL cannot reliably read the SD
 on this board, so the proven vendor preloader is used; the rest of the stack is
 modern and built from source. SD layout (partition numbers = disk order): `p1`
 FAT (boot) · `p2` type-A2 (vendor preloader) · `p3` ext4 rootfs (last, grows).

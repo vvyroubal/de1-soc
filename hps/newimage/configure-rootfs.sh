@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Vedran Vyroubal, Veleuciliste u Karlovcu (VUKA)
-# Configure the debootstrapped Debian 12 armhf rootfs for the DE1-SoC.
+# Configure the debootstrapped Debian 13 armhf rootfs for the DE1-SoC.
 # Run as root (pkexec) AFTER debootstrap --second-stage completes.
 set -e
 # Resolve this script's own directory so the tree works from any clone location.
@@ -17,11 +17,11 @@ cat > "$R/etc/hosts" <<EOF
 ::1         localhost ip6-localhost ip6-loopback
 EOF
 
-echo "[*] apt sources (bookworm)"
+echo "[*] apt sources (trixie)"
 cat > "$R/etc/apt/sources.list" <<EOF
-deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
-deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
-deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
 EOF
 
 echo "[*] fstab"

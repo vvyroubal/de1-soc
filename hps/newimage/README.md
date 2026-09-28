@@ -1,7 +1,7 @@
-# DE1-SoC — Debian 12 + Linux 6.12 SD image
+# DE1-SoC — Debian 13 + Linux 6.12 SD image
 
 A modern OS image for the Terasic DE1-SoC (Intel Cyclone V SoC, `5CSEMA5F31C6`):
-Debian 12 (bookworm, armhf) on mainline Linux 6.12, booting via a vendor-hybrid
+Debian 13 (trixie, armhf) on mainline Linux 6.12, booting via a vendor-hybrid
 chain (proven vendor 2013 preloader/U-Boot + mainline kernel + Debian), with the
 FPGA GHRD auto-loaded at boot.
 
@@ -47,10 +47,10 @@ Runs, in order:
 3. **dtbocfg** — build the out-of-tree `dtbocfg` overlay-configfs module
    (vendored at `dtbocfg/`) and stage it into the kernel modules tree. This is
    what enables runtime FPGA reconfiguration from Linux (`fpga-load.sh`).
-4. **rootfs** — `debootstrap` a bookworm armhf rootfs (incl. `dbus`, ssh, sudo,
+4. **rootfs** — `debootstrap` a trixie armhf rootfs (incl. `dbus`, ssh, sudo,
    systemd-timesyncd, locales) and configure it (`make-rootfs.sh` →
    `configure-rootfs.sh`). **Needs root** (debootstrap/chroot) — runs via `sudo`.
-5. **image** — assemble `image/de1soc-debian12-6.12.img` (`assemble-image.sh`).
+5. **image** — assemble `image/de1soc-debian13-6.12.img` (`assemble-image.sh`).
    **Needs root** (loopback, mkfs, mount).
 
 Override the privilege escalation with `make ROOT=pkexec all`.
@@ -61,7 +61,7 @@ The build produces an **uncompressed** image. Identify the card with `lsblk`
 (wrong target destroys your host disk!), then:
 
 ```bash
-sudo dd if=image/de1soc-debian12-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sudo dd if=image/de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 ```
 
@@ -75,7 +75,7 @@ If a release `.img.xz` is available for this project, you can skip the build and
 flash it directly instead of building:
 
 ```bash
-xzcat de1soc-debian12-6.12.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
+xzcat de1soc-debian13-6.12.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
 ```
 
 (There may be no release yet — in that case, build from source as above.)

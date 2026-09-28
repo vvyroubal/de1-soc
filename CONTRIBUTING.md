@@ -35,7 +35,7 @@ didn't clone with `--recurse-submodules`.
 There is no CI for the full image build (it needs root for `debootstrap`/loopback
 and is heavy). Please test locally and say what you verified in the PR:
 
-- **Build**: `make all` completes and produces `image/de1soc-debian12-6.12.img`.
+- **Build**: `make all` completes and produces `image/de1soc-debian13-6.12.img`.
 - **Boot** (for changes that affect the running system): flash a card, set
   **MSEL = 00000**, boot, and confirm login over serial (`115200 8N1`) and, where
   relevant, SSH. Note the board has no RTC (time sets via NTP once networked).
