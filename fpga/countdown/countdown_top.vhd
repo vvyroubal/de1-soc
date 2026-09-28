@@ -45,20 +45,30 @@ architecture rtl of countdown_top is
     -- All segments off (displays are active low, so '1' = off).
     constant BLANK : std_logic_vector(6 downto 0) := "1111111";
 
-    -- Decimal digit -> 7-segment pattern.  Bit 0 = segment a ... bit 6 = segment g.
-    function seg7(d : integer range 0 to 9) return std_logic_vector is
+    -- Hex digit -> 7-segment pattern.  Bit 0 = segment a ... bit 6 = segment g.
+    -- 0-9 are the decimal digits; 10-15 are the hex letters A b C d E F (b and d
+    -- are lowercase, since uppercase B/D are indistinguishable from 8/0 on seven
+    -- segments).  The countdown itself only ever feeds 0-9; the A-F entries let
+    -- this decoder drive hex values if reused by another design.
+    function seg7(d : integer range 0 to 15) return std_logic_vector is
     begin
         case d is
-            when 0 => return "1000000";
-            when 1 => return "1111001";
-            when 2 => return "0100100";
-            when 3 => return "0110000";
-            when 4 => return "0011001";
-            when 5 => return "0010010";
-            when 6 => return "0000010";
-            when 7 => return "1111000";
-            when 8 => return "0000000";
-            when 9 => return "0010000";
+            when 0  => return "1000000";
+            when 1  => return "1111001";
+            when 2  => return "0100100";
+            when 3  => return "0110000";
+            when 4  => return "0011001";
+            when 5  => return "0010010";
+            when 6  => return "0000010";
+            when 7  => return "1111000";
+            when 8  => return "0000000";
+            when 9  => return "0010000";
+            when 10 => return "0001000";   -- A
+            when 11 => return "0000011";   -- b
+            when 12 => return "1000110";   -- C
+            when 13 => return "0100001";   -- d
+            when 14 => return "0000110";   -- E
+            when 15 => return "0001110";   -- F
             when others => return BLANK;
         end case;
     end function seg7;
