@@ -87,8 +87,12 @@ kernel: fetch
 
 ## build the dtbocfg overlay-configfs module and stage it with the kernel modules
 ## (gives userspace a way to apply device-tree overlays -> runtime FPGA reconfig)
+## Built through the kernel's own kbuild (M=) rather than dtbocfg/Makefile: that
+## one uses M=$(PWD), and PWD is inherited from the invoking shell (make -C does
+## not change it), so it built in newimage/ instead of dtbocfg/ and no .ko was
+## produced. LOCALVERSION= matches the kernel build so the vermagic is "6.12.0".
 dtbocfg: kernel
-	$(MAKE) -C $(HERE)/dtbocfg ARCH=arm CROSS_COMPILE=$(CROSS) KERNEL_SRC=$(KDIR) all
+	$(MAKE) -C $(KDIR) ARCH=arm CROSS_COMPILE=$(CROSS) LOCALVERSION= M=$(HERE)/dtbocfg modules
 	install -D -m 0644 $(HERE)/dtbocfg/dtbocfg.ko \
 	  $(HERE)/modules-staging/lib/modules/$$(cat $(KDIR)/include/config/kernel.release)/extra/dtbocfg.ko
 
