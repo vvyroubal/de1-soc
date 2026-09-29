@@ -8,7 +8,11 @@
 #     make all        # fetch kernel, build kernel+rootfs, assemble the image
 #     # then flash image/de1soc-debian13-6.12.img to an SD card.
 #
-#  Targets: deps fetch fetch-tarball kernel dtbocfg rootfs image all clean distclean
+#  Or, with no host tools beyond Docker (see README.md "Build with Docker"):
+#     make docker-build
+#
+#  Targets: deps fetch fetch-tarball kernel dtbocfg rootfs image image-rootless
+#           all docker-build clean distclean
 #  rootfs/ and image assembly need root — they run via $(ROOT) (sudo by default;
 #  override with `make ROOT=pkexec image`).
 # =============================================================================
@@ -28,8 +32,13 @@ CROSS   := arm-linux-gnueabihf-
 DTSDIR  := $(KDIR)/arch/arm/boot/dts/intel/socfpga
 JOBS    := $(shell nproc)
 ROOT    ?= sudo
+# repo root (the bind mount for docker-build); also right for a tarball export
+SRCROOT := $(abspath $(HERE)/../..)
+DOCKER  ?= docker
+BUILDER ?= de1soc-build
 
-.PHONY: all deps fetch fetch-tarball kernel dtbocfg rootfs image clean distclean
+.PHONY: all deps fetch fetch-tarball kernel dtbocfg rootfs image image-rootless \
+        docker-build clean distclean
 all: image
 
 ## install the host build tools
@@ -38,7 +47,7 @@ deps:
 	$(ROOT) apt-get install -y build-essential debootstrap qemu-user-static \
 	  binfmt-support gcc-arm-linux-gnueabihf bc bison flex libssl-dev \
 	  u-boot-tools device-tree-compiler dosfstools e2fsprogs util-linux \
-	  kmod cpio xz-utils wget
+	  kmod cpio xz-utils wget mtools
 
 ## fetch kernel source: init the shallow submodule pinned to the v$(KVER) tag.
 ## A `git clone --recurse-submodules` already populated it; this also restores it
@@ -103,6 +112,29 @@ rootfs: dtbocfg
 ## assemble the SD image (needs root: loopback, mkfs, mount)
 image: rootfs
 	$(ROOT) bash $(HERE)/assemble-image.sh
+
+## same image, assembled without loop devices or mounts (containers / CI)
+image-rootless: rootfs
+	$(ROOT) bash $(HERE)/assemble-image-rootless.sh
+
+## build the whole image inside the Docker build container (see Dockerfile).
+## Needs only Docker + qemu-arm registered in binfmt_misc with the F flag.
+## The container runs as root; afterwards every root-owned file it left OUTSIDE
+## rootfs/ (kernel build, modules, image, submodule git metadata) is handed back
+## to the invoking user. rootfs/ stays root-owned on purpose: its ownership is
+## what goes into the image, exactly as with the sudo host build.
+docker-build:
+	@grep -qs '^flags:.*F' /proc/sys/fs/binfmt_misc/qemu-arm || { \
+	  echo "qemu-arm is not registered in binfmt_misc with the F (fix-binary) flag."; \
+	  echo "Debian/Ubuntu host:  sudo apt-get install qemu-user-static"; \
+	  echo "any other host:      $(DOCKER) run --privileged --rm tonistiigi/binfmt --install arm"; \
+	  exit 1; }
+	$(DOCKER) build -t $(BUILDER) - < $(HERE)/Dockerfile
+	$(DOCKER) run --rm -v $(SRCROOT):/src $(BUILDER) bash -c ' \
+	  make ROOT= image-rootless; rc=$$?; \
+	  find /src -path /src/hps/newimage/rootfs -prune -o -uid 0 \
+	    -exec chown -h $(shell id -u):$(shell id -g) {} +; \
+	  exit $$rc'
 
 ## remove build outputs (keeps the downloaded kernel tarball)
 clean:

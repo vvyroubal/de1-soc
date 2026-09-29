@@ -25,7 +25,8 @@ build system that produces it all from source.
 **Host (to build the image or flash a card)**
 - A **Debian/Ubuntu x86-64** machine with `sudo` and an **internet connection**
   (the build fetches the Linux kernel from kernel.org and Debian packages from
-  the Debian mirror).
+  the Debian mirror) — **or** any Linux x86-64 host with **Docker** (see
+  `make docker-build` below).
 - An SD card reader.
 
 **You do NOT need Quartus** to build or run the OS image — the compiled FPGA
@@ -49,6 +50,15 @@ make all       # build kernel + Debian rootfs, assemble the image
 
 (Cloned without `--recurse-submodules`? No problem — `make` initializes the
 kernel submodule for you, or run `git submodule update --init --depth 1`.)
+
+**Not on Debian/Ubuntu, or prefer not to install the toolchain?** Build inside
+Docker instead — the host needs only Docker plus ARM emulation (`qemu-arm`
+registered in binfmt_misc; the target checks and explains):
+
+```bash
+cd DE1-SoC/hps/newimage
+make docker-build     # same image, built in a container (see hps/newimage/README.md)
+```
 
 This produces **`hps/newimage/image/de1soc-debian13-6.12.img`** (uncompressed).
 Details, internals, and an (optional) prebuilt-release path:

@@ -31,6 +31,9 @@ make all
 The kernel is a shallow submodule pinned to `v6.12`; `make` initializes it if you
 didn't clone with `--recurse-submodules`.
 
+On any other Linux host with Docker, `make docker-build` runs the same build in a
+container (see `hps/newimage/README.md`, "Build with Docker").
+
 ## Testing changes
 There is no CI for the full image build (it needs root for `debootstrap`/loopback
 and is heavy). Please test locally and say what you verified in the PR:

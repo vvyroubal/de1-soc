@@ -28,7 +28,10 @@ make deps
 (Installs: `build-essential`, `debootstrap`, `qemu-user-static`,
 `binfmt-support`, `gcc-arm-linux-gnueabihf`, `u-boot-tools`,
 `device-tree-compiler`, `dosfstools`, `e2fsprogs`, `util-linux`, `kmod`, `cpio`,
-`bc bison flex libssl-dev xz-utils wget`.)
+`bc bison flex libssl-dev xz-utils wget mtools`.)
+
+Not on Debian/Ubuntu, or don't want the tools on your host? Use
+[Build with Docker](#build-with-docker) instead.
 
 ### Build
 
@@ -54,7 +57,40 @@ Runs, in order:
    **Needs root** (loopback, mkfs, mount).
 
 Override the privilege escalation with `make ROOT=pkexec all`.
+`make image-rootless` builds the identical image without loop devices or mounts
+(`assemble-image-rootless.sh`) — for containers/CI, or hosts without loop setup.
 `make clean` removes build outputs; `make distclean` also drops the kernel tarball.
+
+### Build with Docker
+
+Builds the same image inside a container (`Dockerfile`, Debian trixie with every
+tool from `make deps`), so the host needs only **Docker** and **git**:
+
+```bash
+make docker-build
+```
+
+This builds the `de1soc-build` container image, bind-mounts the repo, runs the
+full pipeline inside it (`make ROOT= image-rootless`) and leaves the result at
+`image/de1soc-debian13-6.12.img`, same as the host build. It takes roughly
+15–20 min on first run (kernel compile plus `debootstrap` under emulation).
+
+- **One host prerequisite — ARM emulation.** The rootfs step runs armhf binaries
+  in a chroot, which needs `qemu-arm` registered in the host kernel's
+  `binfmt_misc` **with the F (fix-binary) flag** (binfmt is kernel-wide, so the
+  container can't set it up itself). `make docker-build` checks and tells you
+  if it's missing. To register it:
+  - Debian/Ubuntu host: `sudo apt-get install qemu-user-static`
+  - any other Linux host: `docker run --privileged --rm tonistiigi/binfmt --install arm`
+    (re-run after a reboot)
+- **No `--privileged` needed** for the build container itself.
+- **File ownership:** the container runs as root; afterwards the build outputs
+  are handed back to your user. `rootfs/` stays root-owned on purpose (its
+  ownership is what goes into the image), so remove it with `make clean`
+  (which uses `sudo`) or `sudo rm -rf rootfs`.
+- Tested on a Linux host with Docker. Docker Desktop on macOS/Windows is
+  untested: its bind mounts may not preserve root ownership in `rootfs/`.
+- Override the engine or container image name with `make DOCKER=... BUILDER=... docker-build`.
 
 ### Flash the result
 The build produces an **uncompressed** image. Identify the card with `lsblk`
@@ -86,7 +122,7 @@ xzcat de1soc-debian13-6.12.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=
 
 | Tracked in git | Generated / built (not in a clone) |
 |---|---|
-| build scripts, `Makefile`, `make-rootfs.sh` | built kernel (`zImage`, modules) |
+| build scripts, `Makefile`, `make-rootfs.sh`, `Dockerfile` | built kernel (`zImage`, modules) |
 | `kernel-custom/` (defconfig + DTS) | Debian `rootfs/`, `modules-staging/` |
 | **kernel source** — shallow submodule `kernel/linux-6.12` @ `v6.12` | built `image/*.img` |
 | `fpga/soc_system.rbf` (GHRD bitstream) | the Qsys `de1_soc/` dir |
