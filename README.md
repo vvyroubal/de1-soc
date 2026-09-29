@@ -117,12 +117,13 @@ sudo /usr/local/sbin/expand-rootfs.sh && sudo reboot   # grow rootfs to fill the
 ---
 
 ## Networking / SSH
-`eth0` is configured for **DHCP** and `ssh` is enabled. Plug in Ethernet and:
+The Ethernet interface is **`end0`** (the kernel's name for it; not `eth0`). It
+is configured for **DHCP** and `ssh` is enabled. Plug in Ethernet and:
 
 ```bash
 ssh debian@de1-soc-debian        # by hostname (mDNS/your DNS), or use the IP
 ```
-Find the IP from your router, or on the serial console with `ip a`.
+Find the IP from your router, or on the serial console with `ip addr show end0`.
 
 ---
 

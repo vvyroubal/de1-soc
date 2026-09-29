@@ -172,11 +172,12 @@ FPGA reconfiguration} from Linux (see \emph{Changing the FPGA fabric}).
 \end{note}
 
 \section{Networking and SSH}
-\code{eth0} is configured for DHCP and an SSH server starts at boot. Once Ethernet
+The Ethernet interface is \code{end0} (the kernel's name for it; not \code{eth0}).
+It is configured for DHCP and an SSH server starts at boot. Once Ethernet
 has an address you can drop the serial cable.
 \begin{lstlisting}
 # on the board
-ip addr show eth0            # look for an inet address
+ip addr show end0            # look for an inet address
 # from your computer
 ssh debian@de1-soc-debian    # by hostname, or use the IP address
 \end{lstlisting}
@@ -331,6 +332,6 @@ No boot / boot loops / ``card did not respond'' & Image not written correctly. R
 \code{journalctl}: ``insufficient permissions'' & \code{sudo usermod -aG systemd-journal debian} and re-login (the current image already does this). \\ \addlinespace
 Clock/time is wrong & The board has no RTC; it sets over NTP once networked (systemd-timesyncd). \\ \addlinespace
 \code{err=-110} on FPGA Manager apply & The \code{.rbf} is compressed. Regenerate uncompressed: \code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}. \\ \addlinespace
-No IP on \code{eth0} & Ensure the network has DHCP; check \code{ip addr}, or set a static address. \\
+No IP on \code{end0} & Ensure the network has DHCP; check \code{ip addr}, or set a static address. \\
 \bottomrule
 \end{longtable}

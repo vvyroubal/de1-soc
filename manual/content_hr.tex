@@ -170,11 +170,12 @@ programabilne logike}).
 \end{note}
 
 \section{Mreža i SSH}
-\code{eth0} je postavljen na DHCP, a SSH poslužitelj se pokreće pri podizanju. Kad
+Ethernet sučelje zove se \code{end0} (ime koje mu daje jezgra; ne \code{eth0}).
+Postavljeno je na DHCP, a SSH poslužitelj se pokreće pri podizanju. Kad
 Ethernet dobije adresu, možete odspojiti serijski kabel.
 \begin{lstlisting}
 # na plocici
-ip addr show eth0            # potrazite inet adresu
+ip addr show end0            # potrazite inet adresu
 # s vaseg racunala
 ssh debian@de1-soc-debian    # po imenu racunala, ili koristite IP adresu
 \end{lstlisting}
@@ -329,6 +330,6 @@ Nema podizanja / vrti se u krug / ``card did not respond'' & Slika nije ispravno
 \code{journalctl}: ``insufficient permissions'' & \code{sudo usermod -aG systemd-journal debian} i ponovna prijava (trenutna slika to već radi). \\ \addlinespace
 Sat/vrijeme je netočno & Pločica nema RTC; vrijeme se postavlja preko NTP-a kad dobije mrežu (systemd-timesyncd). \\ \addlinespace
 \code{err=-110} pri primjeni FPGA Managera & \code{.rbf} je komprimiran. Ponovno generirajte nekomprimirano: \code{quartus\_cpf -c -o bitstream\_compression=off design.sof design.rbf}. \\ \addlinespace
-Nema IP adrese na \code{eth0} & Provjerite ima li mreža DHCP; provjerite \code{ip addr} ili postavite statičku adresu. \\
+Nema IP adrese na \code{end0} & Provjerite ima li mreža DHCP; provjerite \code{ip addr} ili postavite statičku adresu. \\
 \bottomrule
 \end{longtable}
