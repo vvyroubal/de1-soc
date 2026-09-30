@@ -4,7 +4,7 @@
 A from-scratch guide to running modern Linux on the DE1-SoC's hard processor
 system (HPS) and reaching a shell over serial and SSH --- the foundation for
 embedded and FPGA development on the board. You will end up with \textbf{Debian
-12 (trixie)} on \textbf{mainline Linux 6.12}, a serial console at
+13 (trixie)} on \textbf{mainline Linux 6.12}, a serial console at
 \code{115200 8N1}, and SSH access, with the FPGA fabric configured at boot. The
 image is headless (no graphical desktop); you work over the serial console and
 SSH.
@@ -19,7 +19,7 @@ microSD card and a card reader.
   \item \textbf{microSD card reader} --- USB reader or a built-in slot.
   \item \textbf{USB cable (console)} --- for the board's UART-to-USB port (Silicon Labs CP210x bridge).
   \item \textbf{Ethernet cable} (optional) --- to a network with DHCP, for SSH and internet.
-  \item \textbf{Linux build host} (optional) --- a Debian/Ubuntu x86-64 machine if you want to build the image from source rather than flash a prebuilt one.
+  \item \textbf{Linux build host} (optional) --- only if you want to build the image from source rather than flash a prebuilt one: a Debian/Ubuntu x86-64 machine, or any Linux x86-64 machine with Docker.
 \end{itemize}
 
 \noindent\textbf{Software on your computer:} an SD-card writer
@@ -34,7 +34,17 @@ vendor-hybrid boot chain (the proven vendor preloader/U-Boot plus a mainline
 kernel and Debian userspace). \textbf{You do not need Quartus:} the compiled FPGA
 bitstream (\code{soc\_system.rbf}) is committed.
 
-\subsection{Option A --- build from source (this repo)}
+\subsection{Option A --- download a prebuilt release (quickest)}
+Download \code{de1soc-debian13-6.12.img.xz} and \code{SHA256SUMS.txt} from the
+\href{https://github.com/vvyroubal/de1-soc/releases/latest}{latest release} on GitHub, check it and decompress it:
+\begin{lstlisting}
+sha256sum -c SHA256SUMS.txt --ignore-missing   # -> de1soc-debian13-6.12.img.xz: OK
+unxz de1soc-debian13-6.12.img.xz               # -> de1soc-debian13-6.12.img
+\end{lstlisting}
+Then flash \code{de1soc-debian13-6.12.img} (next section). (balenaEtcher can also
+flash the \code{.img.xz} directly.)
+
+\subsection{Option B --- build from source (this repo)}
 On a Debian/Ubuntu x86-64 host with an internet connection:
 \begin{lstlisting}
 git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
@@ -43,13 +53,13 @@ make deps      # one-time: install the host build tools (uses sudo/apt)
 make all       # build kernel + Debian rootfs, assemble the image
 # result: image/de1soc-debian13-6.12.img
 \end{lstlisting}
+On any other Linux x86-64 host, \code{make docker-build} builds the same image
+inside a Docker container instead of \code{make deps} + \code{make all} (the host
+needs only Docker plus \code{qemu-arm} registered for ARM emulation; the target
+checks and explains). A build takes roughly 15--20 minutes.
 The Linux kernel source is a shallow git submodule pinned to \code{v6.12}; if you
 cloned without \code{-{}-recurse-submodules}, \code{make} initialises it for you.
 See \code{hps/newimage/README.md} for details.
-
-\subsection{Option B --- flash a prebuilt release}
-If a release image (\code{de1soc-debian13-6.12.img.xz}) is published for the
-project, you can skip the build and flash it directly (see the next section).
 
 \begin{tip}[Keep a reference copy]
 Keep a known-good image untouched as a reference; always flash a copy.
@@ -283,10 +293,15 @@ driver probe.
 \end{warn}
 
 \section{Changing the FPGA fabric}
-The supported way to set the fabric on this image is \textbf{at boot}: U-Boot's
-\code{u-boot.scr} loads \code{soc\_system.rbf} from the FAT partition over the FPP
-path. To change the design, replace that file on the FAT partition (above) and
-reboot.
+There are two ways to change the fabric on this image:
+\begin{itemize}
+  \item \textbf{At boot} --- U-Boot's \code{u-boot.scr} loads
+        \code{soc\_system.rbf} from the FAT partition over the FPP path. Replace
+        that file on the FAT partition (above) and reboot; the change is permanent.
+  \item \textbf{At runtime from Linux} --- \code{fpga-load.sh} reprograms the
+        fabric without a reboot (see below). The change lasts until the next
+        reboot, when U-Boot loads \code{soc\_system.rbf} again.
+\end{itemize}
 
 \begin{warn}[The \code{.rbf} must be uncompressed]
 With \code{MSEL=00000} the HPS configures the FPGA over the passive (FPP) path,
@@ -302,14 +317,23 @@ is compressed.
 You can also reconfigure the fabric at runtime from the HPS. Mainline Linux has no
 built-in userspace overlay interface, so this image autoloads the \code{dtbocfg}
 module (providing \code{/sys/kernel/config/device-tree/overlays}) and ships
-\code{/usr/local/sbin/fpga-load.sh}. It stages an uncompressed \code{.rbf} to
-\code{/lib/firmware} and applies a device-tree overlay to
-\code{/soc/base\_fpga\_region}, so the FPGA Manager programs the fabric:
+\code{/usr/local/sbin/fpga-load.sh}. It applies a device-tree overlay to
+\code{/soc/base\_fpga\_region} naming a bitstream under \code{/lib/firmware}
+(the overlay is compiled on the board with the preinstalled \code{dtc}), so the
+FPGA Manager programs the fabric. Two demos ship ready to load in
+\code{/lib/firmware/designs/}:
 \begin{lstlisting}
-sudo /usr/local/sbin/fpga-load.sh my_design.rbf
-cat /sys/class/fpga_manager/fpga0/state    # -> operating
+sudo fpga-load.sh --name designs/marquee.rbf    # scrolls "debian 13" on HEX5..HEX0
+sudo fpga-load.sh --name designs/countdown.rbf  # counts 100 -> 0 on HEX2..HEX0
+cat /sys/class/fpga_manager/fpga0/state         # -> operating
+sudo fpga-load.sh -u                            # remove the overlay
 \end{lstlisting}
-The \code{.rbf} must be uncompressed either way. See \code{fpga/fpga-load/}.
+For your own design, pass the \code{.rbf}: \code{sudo fpga-load.sh my\_design.rbf}
+copies it to \code{/lib/firmware/fpga.rbf} and loads it;
+\code{-{}-link my\_design.rbf} symlinks it there instead of copying; and
+\code{-{}-name <file>} loads any file under \code{/lib/firmware} by name.
+\code{sudo fpga-load.sh -s} shows what is loaded. The \code{.rbf} must be
+uncompressed either way. See \code{fpga/fpga-load/}.
 
 This works for any design, including ones that expose memory-mapped slaves to
 the HPS through the FPGA bridges: the FPGA region disables the bridges before

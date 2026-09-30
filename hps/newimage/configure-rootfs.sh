@@ -46,11 +46,13 @@ Storage=persistent
 SystemMaxUse=512M
 EOF
 
-echo "[*] systemd-networkd DHCP on eth0"
+# The on-board Ethernet is named end0 by this kernel; en* matches it (and any
+# USB Ethernet adapter, e.g. enx<mac>).
+echo "[*] systemd-networkd DHCP on end0 (en*)"
 mkdir -p "$R/etc/systemd/network"
 cat > "$R/etc/systemd/network/10-eth.network" <<EOF
 [Match]
-Name=eth0 en*
+Name=en*
 [Network]
 DHCP=yes
 EOF
