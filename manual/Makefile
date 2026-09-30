@@ -7,10 +7,10 @@ all: en hr
 en: main_en.pdf
 hr: main_hr.pdf
 
-main_en.pdf: main_en.tex content_en.tex preamble.tex
+main_en.pdf: main_en.tex content_en.tex preamble.tex version.tex
 	$(LATEXMK) main_en.tex
 
-main_hr.pdf: main_hr.tex content_hr.tex preamble.tex
+main_hr.pdf: main_hr.tex content_hr.tex preamble.tex version.tex
 	$(LATEXMK) main_hr.tex
 
 clean:

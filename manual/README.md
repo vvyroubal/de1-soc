@@ -8,6 +8,7 @@ documents** (English and Croatian) that share one preamble.
 | File | Purpose |
 |------|---------|
 | `preamble.tex` | Shared preamble — palette, code/callout styling, fonts, babel. |
+| `version.tex` | **Which project release the manual describes** (release, date, Debian point version, kernel) — shown on the title page, colophon, overview and every footer. |
 | `main_en.tex` | English edition (title page + includes `content_en.tex`). |
 | `content_en.tex` | English content. |
 | `main_hr.tex` | Croatian edition (title page + includes `content_hr.tex`). |
@@ -32,6 +33,12 @@ latexmk -pdf main_hr.tex
 Requires a full TeX Live (`babel` with croatian+english, `listings`, `tcolorbox`,
 `hyperref`). Compiles with `pdflatex`; UTF-8 + T1 fonts render the Croatian
 diacritics.
+
+## Releases
+Each project release ships these PDFs as release assets, stamped with the
+release they describe. When cutting a release, update `version.tex` first
+(`ManualRelease`, `ManualReleaseDate`, and `ManualOS` = the image's
+`/etc/debian_version`), run `make`, and commit the PDFs with the release.
 
 ## Editing content
 - Keep `content_en.tex` and `content_hr.tex` structurally in sync (same sections, same order).

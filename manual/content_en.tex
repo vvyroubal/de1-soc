@@ -3,11 +3,18 @@
 \addcontentsline{toc}{section}{Overview}
 A from-scratch guide to running modern Linux on the DE1-SoC's hard processor
 system (HPS) and reaching a shell over serial and SSH --- the foundation for
-embedded and FPGA development on the board. You will end up with \textbf{Debian
-13 (trixie)} on \textbf{mainline Linux 6.12}, a serial console at
+embedded and FPGA development on the board. You will end up with
+\textbf{\ManualOS} on \textbf{mainline \ManualKernel}, a serial console at
 \code{115200 8N1}, and SSH access, with the FPGA fabric configured at boot. The
 image is headless (no graphical desktop); you work over the serial console and
 SSH.
+
+\begin{note}[Which release this manual describes]
+This edition describes project release \textbf{\ManualRelease}
+(\ManualReleaseDate): \ManualOS{} on \ManualKernel. Newer releases may differ;
+the manual shipped with each release matches it (see the release page on
+GitHub).
+\end{note}
 
 \section{What you need}
 Most of this ships in the box; the only items you may need to source are a

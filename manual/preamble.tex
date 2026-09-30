@@ -51,6 +51,9 @@
 \newcommand{\ManualInstEN}{Karlovac University of Applied Sciences}
 \newcommand{\ManualAddr}{Trg J.\,J.~Strossmayera 9, 47000 Karlovac, Hrvatska}
 
+% ---- release this manual describes (edit version.tex) ------------------------
+\input{version}
+
 % ---- wordmarks --------------------------------------------------------------
 \newcommand{\vukawordmarklight}{% for dark (purple) backgrounds
   {\bfseries\color{vukagold}\Large VELEU\v CILI\v STE U KARLOVCU}\\[2pt]
@@ -107,11 +110,11 @@
 \fancyhead[L]{\small\textcolor{vukapurple}{\textbf{VELEU\v CILI\v STE U KARLOVCU}}}
 \fancyhead[R]{\small\textcolor{vukaslate}{\leftmark}}
 \fancyfoot[C]{\small\thepage}
-\fancyfoot[R]{\scriptsize\textcolor{comment}{DE1-SoC}}
+\fancyfoot[R]{\scriptsize\textcolor{comment}{DE1-SoC \ManualRelease}}
 
 % ---- full-bleed purple title page helper ------------------------------------
-% \vukatitlepage{BIG TITLE}{subtitle line}{created-at line}
-\newcommand{\vukatitlepage}[3]{%
+% \vukatitlepage{BIG TITLE}{subtitle line}{created-at line}{release line}
+\newcommand{\vukatitlepage}[4]{%
 \begin{titlepage}
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay]
@@ -129,7 +132,8 @@
 {\noindent\color{white}\small #3\par}
 \vspace{0.2cm}
 {\noindent\color{white}\small \ManualAuthor{} \,\textbullet\, \ManualInstHR\par}
-{\noindent\color{white!75}\footnotesize \today\par}
+{\noindent\color{vukagold}\small\bfseries #4\par}
+{\noindent\color{white!75}\footnotesize \ManualReleaseDate\par}
 \end{titlepage}}
 
 % inline helpers.  \code lets long path tokens break at "/" and "-" so they
