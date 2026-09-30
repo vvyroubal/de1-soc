@@ -66,20 +66,32 @@ use the runtime path below.)
 ## Run it from HPS Linux at runtime (no JTAG, no reboot)
 
 On the Debian image (MSEL = 00000) reconfigure the fabric from Linux via the
-shared loader in [`../fpga-load/`](../fpga-load/). Make an **uncompressed** `.rbf`
-(MSEL=00000 / FPP path) and load it:
+shared loader in [`../fpga-load/`](../fpga-load/). **The image ships it
+prebuilt** (v2.0.2+, with the default `"debian 13"` message) at
+`/lib/firmware/designs/marquee.rbf`:
+
+```bash
+sudo fpga-load.sh --name designs/marquee.rbf        # program the shipped copy
+cat /sys/class/fpga_manager/fpga0/state             # -> operating
+sudo fpga-load.sh -u                                # remove overlay (release the region)
+```
+
+For your own message, rebuild, make an **uncompressed** `.rbf` (MSEL=00000 /
+FPP path) and pass it to the loader:
 
 ```bash
 quartus_cpf -c -o bitstream_compression=off output_files/marquee.sof marquee.rbf
-sudo /usr/local/sbin/fpga-load.sh marquee.rbf       # stage to /lib/firmware + program
-cat /sys/class/fpga_manager/fpga0/state             # -> operating
-sudo /usr/local/sbin/fpga-load.sh -u                # remove overlay (release the region)
+sudo fpga-load.sh marquee.rbf                       # copy to /lib/firmware/fpga.rbf + program
 ```
+
+After changing the design, refresh the copy the image ships with
+`cp marquee.rbf ../../hps/newimage/fpga/designs/` and rebuild the image.
 
 The one marquee-specific file here:
 - `marquee_overlay.dts` — overlay source (target `/soc/base_fpga_region`) naming
-  `marquee.rbf`; it is **not** what `fpga-load.sh` applies — use it only if you
-  apply an overlay manually (then place the bitstream at `/lib/firmware/marquee.rbf`).
+  `marquee.rbf`, for reference. `fpga-load.sh` generates the same overlay
+  itself: copy the bitstream to `/lib/firmware/marquee.rbf` and run
+  `sudo fpga-load.sh --name marquee.rbf` (needs `dtc`, preinstalled from v2.0.2).
 
 ## Files
 | File | Purpose |
@@ -87,4 +99,5 @@ The one marquee-specific file here:
 | `marquee_top.vhd` | The design (scroll engine + 7-segment font). |
 | `marquee.qsf` | Quartus device (`5CSEMA5F31C6`) + pin assignments. |
 | `marquee.qpf` | Quartus project file. |
+| `marquee.sdc` | Timing constraint: the 50 MHz `CLOCK_50`. |
 | `marquee_overlay.dts` | Marquee-specific overlay source (reference — see above). |

@@ -10,7 +10,8 @@ FPGA GHRD auto-loaded at boot.
 
 For physical board setup (MSEL, serial console, flashing, first boot, SSH) see
 the top-level [`../../README.md`](../../README.md). This file covers building the
-image.
+image. Don't need to build it? Flash a [prebuilt release](#prebuilt-image)
+instead.
 
 ---
 
@@ -51,7 +52,8 @@ Runs, in order:
    (vendored at `dtbocfg/`) and stage it into the kernel modules tree. This is
    what enables runtime FPGA reconfiguration from Linux (`fpga-load.sh`).
 4. **rootfs** — `debootstrap` a trixie armhf rootfs (incl. `dbus`, ssh, sudo,
-   systemd-timesyncd, locales) and configure it (`make-rootfs.sh` →
+   systemd-timesyncd, locales, a native `gcc`/`make` toolchain, and `dtc` for
+   `fpga-load.sh`'s on-board overlays) and configure it (`make-rootfs.sh` →
    `configure-rootfs.sh`). **Needs root** (debootstrap/chroot) — runs via `sudo`.
 5. **image** — assemble `image/de1soc-debian13-6.12.img` (`assemble-image.sh`).
    **Needs root** (loopback, mkfs, mount).
@@ -105,16 +107,18 @@ Then set MSEL = 00000, insert, power on — see the [top-level README](../../REA
 
 ---
 
-## Prebuilt image (if a release is published)
+## Prebuilt image
 
-If a release `.img.xz` is available for this project, you can skip the build and
-flash it directly instead of building:
+Each release ships this image (from v2.0.1 on, built with `make docker-build`
+from a fresh clone of the release tag). To skip the build, download
+`de1soc-debian13-6.12.img.xz` and `SHA256SUMS.txt` from the
+[latest release](https://github.com/vvyroubal/de1-soc/releases/latest), check
+and flash:
 
 ```bash
+sha256sum -c SHA256SUMS.txt --ignore-missing
 xzcat de1soc-debian13-6.12.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
 ```
-
-(There may be no release yet — in that case, build from source as above.)
 
 ---
 
@@ -125,7 +129,8 @@ xzcat de1soc-debian13-6.12.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=
 | build scripts, `Makefile`, `make-rootfs.sh`, `Dockerfile` | built kernel (`zImage`, modules) |
 | `kernel-custom/` (defconfig + DTS) | Debian `rootfs/`, `modules-staging/` |
 | **kernel source** — shallow submodule `kernel/linux-6.12` @ `v6.12` | built `image/*.img` |
-| `fpga/soc_system.rbf` (GHRD bitstream) | the Qsys `de1_soc/` dir |
+| `fpga/soc_system.rbf` (GHRD bitstream, loaded at boot) | the Qsys `de1_soc/` dir |
+| `fpga/designs/*.rbf` (countdown + marquee demos → `/lib/firmware/designs/`) | |
 | `fpga/vendor-a2-preloader-uboot.bin` (vendor bootloader) | |
 | `image/u-boot.scr` (+ experimental `*mainline*`) | |
 | `legal/` incl. `legal/source/*.tar.gz` (GPL corresponding source) | |

@@ -22,12 +22,13 @@ build system that produces it all from source.
 - Optional: an **Ethernet cable** (for SSH / networking), and a USB cable to the
   **USB-Blaster II** JTAG port if you want to program the FPGA over JTAG.
 
-**Host (to build the image or flash a card)**
-- A **Debian/Ubuntu x86-64** machine with `sudo` and an **internet connection**
-  (the build fetches the Linux kernel from kernel.org and Debian packages from
-  the Debian mirror) — **or** any Linux x86-64 host with **Docker** (see
+**Host**
+- An SD card reader and a way to write a raw image to it (`dd` on Linux/macOS).
+  That's all you need to flash a **prebuilt release**.
+- Only to **build the image yourself**: a **Debian/Ubuntu x86-64** machine with
+  `sudo` and an **internet connection** (the build fetches the Linux kernel and
+  Debian packages) — **or** any Linux x86-64 host with **Docker** (see
   `make docker-build` below).
-- An SD card reader.
 
 **You do NOT need Quartus** to build or run the OS image — the compiled FPGA
 bitstream (`hps/newimage/fpga/soc_system.rbf`) is committed. Quartus is only
@@ -38,8 +39,19 @@ needed to *rebuild/modify* the FPGA fabric (see [FPGA](#fpga)).
 ## Quick start
 
 ### 1. Get an image
-Clone the repo **with submodules** (the Linux kernel source is a shallow
-submodule pinned to `v6.12`), then build from source (no Quartus needed):
+
+**Option A — download a release (quickest).** Grab
+`de1soc-debian13-6.12.img.xz` and `SHA256SUMS.txt` from the
+[latest release](https://github.com/vvyroubal/de1-soc/releases/latest), then:
+
+```bash
+sha256sum -c SHA256SUMS.txt --ignore-missing   # expect: de1soc-debian13-6.12.img.xz: OK
+unxz de1soc-debian13-6.12.img.xz               # -> de1soc-debian13-6.12.img (~1.8 GB)
+```
+
+**Option B — build from source.** Clone the repo **with submodules** (the Linux
+kernel source is a shallow submodule pinned to `v6.12`), then build (no Quartus
+needed):
 
 ```bash
 git clone --recurse-submodules https://github.com/vvyroubal/de1-soc.git DE1-SoC
@@ -60,8 +72,8 @@ cd DE1-SoC/hps/newimage
 make docker-build     # same image, built in a container (see hps/newimage/README.md)
 ```
 
-This produces **`hps/newimage/image/de1soc-debian13-6.12.img`** (uncompressed).
-Details, internals, and an (optional) prebuilt-release path:
+Either build produces **`hps/newimage/image/de1soc-debian13-6.12.img`**
+(uncompressed) — the same image the releases ship. Details and internals:
 **[`hps/newimage/README.md`](hps/newimage/README.md)**.
 
 ### 2. Flash the SD card
@@ -73,10 +85,11 @@ host disk**:
 lsblk        # identify the card, e.g. /dev/sdX  (NOT a partition like sdX1)
 ```
 
-Then write the image (replace `/dev/sdX` with your card):
+Then write the image (replace `/dev/sdX` with your card; for a build, the image
+is at `hps/newimage/image/de1soc-debian13-6.12.img`):
 
 ```bash
-sudo dd if=hps/newimage/image/de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
+sudo dd if=de1soc-debian13-6.12.img of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 ```
 
@@ -138,7 +151,7 @@ dir) are **generated, not tracked**, and won't be present until you build.
 | Path | What it is |
 |---|---|
 | **[`hps/newimage/`](hps/newimage/)** | The Debian 13 + Linux 6.12 SD-image build — `Makefile`, scripts, kernel config + DE1-SoC device tree, committed bitstream + vendor bootloader, license bundle. **Start here.** |
-| **[`fpga/`](fpga/)** | FPGA designs: [`hps_ghrd/`](fpga/hps_ghrd/) (the HPS reference design → `soc_system.rbf`), [`countdown/`](fpga/countdown/) (standalone 7-seg demo), [`fpga-load/`](fpga/fpga-load/) (runtime bitstream loader for any design), `minimal/`, the top-level `de1soc_blinker` (`rtl/` + `constraints/` + `build.tcl`/`program.sh`). |
+| **[`fpga/`](fpga/)** | FPGA designs: [`hps_ghrd/`](fpga/hps_ghrd/) (the HPS reference design → `soc_system.rbf`), [`countdown/`](fpga/countdown/) and [`marquee/`](fpga/marquee/) (standalone 7-seg demos: a 100→0 counter and scrolling text), [`fpga-load/`](fpga/fpga-load/) (runtime bitstream loader for any design), `minimal/`, the top-level `de1soc_blinker` (`rtl/` + `constraints/` + `build.tcl`/`program.sh`). |
 | **[`manual/`](manual/)** | Bilingual (EN/HR) illustrated LaTeX setup manual, with committed PDFs. |
 | `BSP/` | Notes for the vendor stock Ubuntu 16.04 image (the image itself is not in the repo — download it from Terasic). |
 
@@ -161,7 +174,13 @@ FAT (boot) · `p2` type-A2 (vendor preloader) · `p3` ext4 rootfs (last, grows).
 - **Load a bitstream at runtime from Linux** (no reboot): `sudo fpga-load.sh <uncompressed.rbf>`.
   The image ships `/usr/local/sbin/fpga-load.sh` and autoloads the `dtbocfg`
   overlay module, so the FPGA Manager reprograms the fabric from userspace via a
-  device-tree overlay on `/soc/base_fpga_region`. See [`fpga/fpga-load/`](fpga/fpga-load/).
+  device-tree overlay on `/soc/base_fpga_region`. `--link <design.rbf>` switches
+  designs without copying them, and `--name <fw>` loads any file under
+  `/lib/firmware` by name (the overlay is compiled on the board with the
+  preinstalled `dtc`; v2.0.2+). The image also ships two demo bitstreams
+  (v2.0.2+): `sudo fpga-load.sh --name designs/marquee.rbf` scrolls text across
+  the 7-segment displays, `designs/countdown.rbf` counts 100 → 0. See
+  [`fpga/fpga-load/`](fpga/fpga-load/).
   Works for **any** design, including ones with HPS-facing slaves on the FPGA
   bridges — the region cycles the bridges around the reprogram, so no reboot or
   boot-time `soc_system.rbf` swap is needed (verified on hardware for both the

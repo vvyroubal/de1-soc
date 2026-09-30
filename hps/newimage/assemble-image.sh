@@ -57,6 +57,9 @@ cp -a "$R/." "$m/"
 rm -f "$m/usr/bin/qemu-arm-static"
 install -m 0755 "$BASE/expand-rootfs.sh" "$m/usr/local/sbin/expand-rootfs.sh"
 install -m 0755 "$BASE/../../fpga/fpga-load/fpga-load.sh" "$m/usr/local/sbin/fpga-load.sh"
+# Demo bitstreams (countdown, marquee) for fpga-load.sh --name designs/<x>.rbf
+install -d -m 0755 "$m/usr/lib/firmware/designs"
+install -m 0644 "$BASE"/fpga/designs/*.rbf "$m/usr/lib/firmware/designs/"
 # Open-source license notices + corresponding-source bundle (GPL compliance)
 mkdir -p "$m/usr/share/doc/de1soc-open-source-licenses"
 cp -a "$BASE/legal/." "$m/usr/share/doc/de1soc-open-source-licenses/"

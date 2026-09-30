@@ -25,12 +25,16 @@ runtime load.)*
 |------|---------|
 | `fpga-load.sh` | The loader (the image installs it at `/usr/local/sbin/fpga-load.sh`). Applies a *generic* overlay to `/soc/base_fpga_region` naming a bitstream under `/lib/firmware` (by default `fpga.rbf`, where it stages **whatever `.rbf` you pass**), so the FPGA Manager programs the fabric. Builds the overlay on the board with `dtc`; falls back to an embedded compiled copy for `fpga.rbf` on images without `dtc`. |
 | `fpga_generic_overlay.dts` | Source of the default overlay (firmware `fpga.rbf`); the script's `overlay_dts` generates the same with any name, and the embedded fallback is this file compiled. |
-| `fpga-overlay.service` | Optional systemd unit to re-apply the staged design at boot. |
+| `fpga-overlay.service` | Optional systemd unit to re-apply the staged `/lib/firmware/fpga.rbf` at boot. Not installed in the image — see [Load at boot](#load-at-boot). |
 
 ## Usage
 
 Needs an **uncompressed** `.rbf` (MSEL=00000 / FPP path):
 `quartus_cpf -c -o bitstream_compression=off design.sof design.rbf`.
+
+The image ships two ready-to-load demos (v2.0.2+) in `/lib/firmware/designs/`:
+`countdown.rbf` (100 → 0 on HEX2..HEX0) and `marquee.rbf` (scrolling "debian 13").
+Try `sudo fpga-load.sh --name designs/marquee.rbf`.
 
 ```bash
 sudo fpga-load.sh design.rbf           # copy to /lib/firmware/fpga.rbf + program
@@ -53,9 +57,24 @@ Which form to use:
   `..`; letters, digits, `. _ + - /`). Needs `dtc` to build the overlay:
   included in images after v2.0.1; on v2.0.1 run
   `sudo apt install device-tree-compiler`.
-- `fpga-overlay.service` re-applies `fpga.rbf` at boot, so the plain and
-  `--link` forms persist across reboots (with the service enabled); `--name`
+- Only `fpga.rbf` is re-applied at boot (by `fpga-overlay.service`, once
+  installed), so the plain and `--link` forms persist across reboots; `--name`
   does not.
+
+## Load at boot
+
+By default the fabric comes up with the GHRD `soc_system.rbf` (loaded by U-Boot)
+after every reboot. To have the staged design re-applied automatically once
+Linux is up, copy `fpga-overlay.service` from this directory to the board
+(e.g. `scp fpga-overlay.service debian@de1-soc-debian:`) and install it there:
+
+```bash
+sudo install -m 0644 fpga-overlay.service /etc/systemd/system/
+sudo systemctl enable --now fpga-overlay.service   # applies /lib/firmware/fpga.rbf now and at each boot
+```
+
+It runs `fpga-load.sh --apply`, and only if `/lib/firmware/fpga.rbf` exists.
+Disable with `sudo systemctl disable fpga-overlay.service`.
 
 How it works: mainline has no built-in userspace overlay interface, so the
 image autoloads the **`dtbocfg`** module (providing

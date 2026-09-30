@@ -74,9 +74,11 @@ graphify-out/
 /hps/newimage/kernel/
 /hps/newimage/rootfs/
 /hps/newimage/modules-staging/
-# Track two large-but-essential binaries so a fresh clone builds with no Quartus
+# Track the large-but-essential binaries so a fresh clone builds with no Quartus
 # and ships GPL-compliant (corresponding U-Boot source) with no extra fetch:
 !/hps/newimage/fpga/soc_system.rbf
+# demo bitstreams shipped in the image at /lib/firmware/designs/ (fpga-load.sh)
+!/hps/newimage/fpga/designs/*.rbf
 !/hps/newimage/legal/source/u-boot-socfpga-ACDS16.0.tar.gz
 # stray out-of-tree module build artifacts (dtbocfg built via M=)
 /hps/newimage/Module.symvers

@@ -34,6 +34,8 @@ echo "[*] finalize rootfs tree (same edits the original makes on the mounted fs)
 rm -f "$R/usr/bin/qemu-arm-static"
 install -m 0755 "$BASE/expand-rootfs.sh" "$R/usr/local/sbin/expand-rootfs.sh"
 install -m 0755 "$BASE/../../fpga/fpga-load/fpga-load.sh" "$R/usr/local/sbin/fpga-load.sh"
+install -d -m 0755 "$R/usr/lib/firmware/designs"
+install -m 0644 "$BASE"/fpga/designs/*.rbf "$R/usr/lib/firmware/designs/"
 mkdir -p "$R/usr/share/doc/de1soc-open-source-licenses"
 cp -a "$BASE/legal/." "$R/usr/share/doc/de1soc-open-source-licenses/"
 rm -rf "$R/var/log/journal"

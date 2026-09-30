@@ -20,7 +20,7 @@ alongside the binaries (satisfying GPLv2 §3(a)).
 | **dtbocfg** — device-tree overlay-configfs module (enables runtime FPGA reconfig from Linux) | ikwzm/dtbocfg 0.1.1 | BSD-2-Clause (Ichiro Kawazome) | Vendored source at `hps/newimage/dtbocfg/` (incl. its `LICENSE`); shipped in the image as the out-of-tree `dtbocfg.ko`. |
 | **Root filesystem** | Debian 13 (trixie), armhf | DFSG (GPL / permissive mix, per-package) | Debian publishes all source via `https://deb.debian.org/debian` and `snapshot.debian.org`; per-package source obtainable with `apt-get source <pkg>`. |
 | **FPGA bitstream** | `soc_system.rbf` — DE1-SoC GHRD (`de1_soc_top_v2.vhd`, a minimal top derived from the community GHRD by S. Kashani-Akhavan) + Altera HPS base IP | Community HDL: **The Unlicense** (public domain) + Intel IP License (compiled bitstream redistributable) | Redistributable as a compiled `.rbf` — see **FPGA bitstream** note below; upstream license at `fpga/hps_ghrd/LICENSE.upstream`. |
-| **Project scripts, custom DTS, device tree, countdown FPGA design** | — | © VUKA, **GPL-2.0-or-later** (see top-level `LICENSE`) | This repository. |
+| **Project scripts, custom DTS, device tree, countdown + marquee FPGA designs** (incl. the demo bitstreams `countdown.rbf` / `marquee.rbf` shipped in `/lib/firmware/designs/`) | — | © VUKA, **GPL-2.0-or-later** (see top-level `LICENSE`) | This repository (`fpga/countdown/`, `fpga/marquee/`). |
 
 ## Bootloader (GPLv2) — the key obligation
 

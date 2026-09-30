@@ -18,6 +18,7 @@ HEX5  HEX4  HEX3   HEX2  HEX1  HEX0
 | `countdown_top.vhd` | The design (counter + BCD + 7-seg decoder). |
 | `countdown.qsf` | Quartus device (`5CSEMA5F31C6`) + pin assignments. |
 | `countdown.qpf` | Quartus project file. |
+| `countdown.sdc` | Timing constraint: the 50 MHz `CLOCK_50`. |
 | `countdown_overlay.dts` | Countdown-specific overlay source (reference — see below). |
 
 The generic runtime loader (`fpga-load.sh`, `fpga_generic_overlay.dts`,
@@ -64,21 +65,32 @@ and ships **`/usr/local/sbin/fpga-load.sh`**. Applying an overlay that targets
 `/soc/base_fpga_region` makes the FPGA Manager program the bitstream. *(Verified
 on hardware: `state` → `operating`.)*
 
-Needs an **uncompressed** `.rbf` (MSEL=00000 / FPP path):
-`quartus_cpf -c -o bitstream_compression=off countdown.sof countdown.rbf`.
+**The image ships it prebuilt** (v2.0.2+) at `/lib/firmware/designs/countdown.rbf`:
 
 ```bash
-sudo /usr/local/sbin/fpga-load.sh countdown.rbf     # stage to /lib/firmware + program
+sudo fpga-load.sh --name designs/countdown.rbf      # program the shipped copy
 cat /sys/class/fpga_manager/fpga0/state             # -> operating
-sudo /usr/local/sbin/fpga-load.sh -u                # remove overlay (release the region)
+sudo fpga-load.sh -u                                # remove overlay (release the region)
 ```
+
+To load your own build instead, make an **uncompressed** `.rbf` (MSEL=00000 /
+FPP path) and pass it to the loader:
+
+```bash
+quartus_cpf -c -o bitstream_compression=off output_files/countdown.sof countdown.rbf
+sudo fpga-load.sh countdown.rbf                     # copy to /lib/firmware/fpga.rbf + program
+```
+
+After changing the design, refresh the copy the image ships with
+`cp countdown.rbf ../../hps/newimage/fpga/designs/` and rebuild the image.
 
 The loader itself lives in [`../fpga-load/`](../fpga-load/) (see its README).
 The one countdown-specific file here:
 - `countdown_overlay.dts` — overlay source (target `/soc/base_fpga_region`)
-  naming `countdown.rbf`; it is **not** what `fpga-load.sh` applies — use it
-  only if you apply an overlay manually (then place the bitstream at
-  `/lib/firmware/countdown.rbf`).
+  naming `countdown.rbf`, for reference. `fpga-load.sh` generates the same
+  overlay itself: copy the bitstream to `/lib/firmware/countdown.rbf` and run
+  `sudo fpga-load.sh --name countdown.rbf` (needs `dtc`, preinstalled from
+  v2.0.2).
 
 (Alternatively, put the `.rbf` on the FAT boot partition and load it from
 `u-boot.scr` at boot — that's how the GHRD `soc_system.rbf` is loaded.)
