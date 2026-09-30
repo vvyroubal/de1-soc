@@ -22,7 +22,9 @@ MIRROR=http://deb.debian.org/debian
 #  - the rest give a usable headless system (ssh, sudo, DHCP, NTP, locales).
 #  - gcc/libc6-dev/make: native C toolchain so small programs (e.g. FPGA
 #    test/demo apps) can be compiled directly on the board.
-INCLUDE=dbus,dbus-user-session,sudo,openssh-server,ca-certificates,locales,kmod,systemd-sysv,systemd-timesyncd,iproute2,gcc,libc6-dev,make
+#  - device-tree-compiler: dtc, so fpga-load.sh can build its FPGA overlay from
+#    source on the board (any firmware name, `fpga-load.sh --name`).
+INCLUDE=dbus,dbus-user-session,sudo,openssh-server,ca-certificates,locales,kmod,systemd-sysv,systemd-timesyncd,iproute2,gcc,libc6-dev,make,device-tree-compiler
 
 [ "$(id -u)" = 0 ] || { echo "run as root:  pkexec bash $0"; exit 1; }
 command -v debootstrap >/dev/null || { echo "missing: debootstrap (run 'make deps')"; exit 1; }
